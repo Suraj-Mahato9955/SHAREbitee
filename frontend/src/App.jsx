@@ -16,28 +16,50 @@ import FoodListings from './pages/FoodListings';
 import AddFood from './pages/AddFood';
 import MyRequests from './pages/MyRequests';
 import AdminPanel from './pages/AdminPanel';
+import VolunteerDashboard from './pages/VolunteerDashboard';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
         <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900 font-sans">
+
           <Navbar />
+
           <main className="flex-grow">
             <Routes>
+
               <Route path="/" element={<Home />} />
+
               <Route path="/login" element={<Login />} />
+
               <Route path="/register" element={<Register />} />
+
               <Route path="/dashboard" element={<Dashboard />} />
+
               <Route path="/food" element={<FoodListings />} />
+
               <Route path="/add-food" element={<AddFood />} />
+
               <Route path="/my-requests" element={<MyRequests />} />
+
               <Route path="/admin" element={<AdminPanel />} />
+
+              {/* Volunteer Dashboard */}
+              <Route
+                path="/volunteer"
+                element={<VolunteerDashboard />}
+              />
+
             </Routes>
           </main>
+
           <Footer />
+
         </div>
+
         <ToastContainer position="bottom-right" />
+
       </Router>
     </AuthProvider>
   );

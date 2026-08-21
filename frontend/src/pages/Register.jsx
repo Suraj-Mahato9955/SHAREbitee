@@ -9,7 +9,7 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('donor');
-  
+
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -31,50 +31,51 @@ const Register = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-gray-700 font-medium mb-2">Full Name</label>
-          <input 
-            type="text" 
+          <input
+            type="text"
             className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50 focus:bg-white transition"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            required 
+            required
             placeholder="John Doe"
           />
         </div>
         <div>
           <label className="block text-gray-700 font-medium mb-2">Email Address</label>
-          <input 
-            type="email" 
+          <input
+            type="email"
             className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50 focus:bg-white transition"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required 
+            required
             placeholder="you@example.com"
           />
         </div>
         <div>
           <label className="block text-gray-700 font-medium mb-2">Password</label>
-          <input 
-            type="password" 
+          <input
+            type="password"
             className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50 focus:bg-white transition"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required 
+            required
             placeholder="••••••••"
           />
         </div>
         <div>
           <label className="block text-gray-700 font-medium mb-2">I want to:</label>
-          <select 
+          <select
             className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50 focus:bg-white transition cursor-pointer"
             value={role}
             onChange={(e) => setRole(e.target.value)}
           >
             <option value="donor">Donate Food</option>
-            <option value="receiver">Receive Food</option>
+            <option value="ngo">Receive Food (NGO)</option>
+            <option value="volunteer">Volunteer</option>
           </select>
         </div>
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition mt-2 shadow-md"
         >
           Register

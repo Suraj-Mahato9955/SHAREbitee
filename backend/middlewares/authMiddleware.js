@@ -18,15 +18,27 @@ const protect = async (req, res, next) => {
       // Get user from the token
       req.user = await User.findById(decoded.id).select('-password');
 
+      // Check if user still exists
+      if (!req.user) {
+        return res.status(401).json({
+          message: 'User not found, please login again'
+        });
+      }
+
       next();
+
     } catch (error) {
       console.error(error);
-      res.status(401).json({ message: 'Not authorized' });
+      return res.status(401).json({
+        message: 'Not authorized'
+      });
     }
   }
 
   if (!token) {
-    res.status(401).json({ message: 'Not authorized, no token' });
+    return res.status(401).json({
+      message: 'Not authorized, no token'
+    });
   }
 };
 
@@ -37,5 +49,14 @@ const admin = (req, res, next) => {
     res.status(401).json({ message: 'Not authorized as an admin' });
   }
 };
+const volunteer = (req, res, next) => {
+  if (req.user && req.user.role === 'volunteer') {
+    next();
+  } else {
+    res.status(401).json({
+      message: 'Not authorized as a volunteer'
+    });
+  }
+};
 
-module.exports = { protect, admin };
+module.exports = { protect, admin, volunteer };

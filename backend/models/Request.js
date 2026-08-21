@@ -6,14 +6,28 @@ const requestSchema = new mongoose.Schema({
     ref: 'Food',
     required: true,
   },
+
   receiverId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
   },
+
+  volunteerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
+
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected'],
+    enum: [
+      'pending',
+      'approved',
+      'rejected',
+      'picked_up',
+      'delivered'
+    ],
     default: 'pending',
   }
 }, { timestamps: true });
