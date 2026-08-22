@@ -5,8 +5,11 @@ const {
   createRequest,
   getMyRequests,
   updateRequestStatus,
+  getVolunteerRequests,
   getDonorRequests,
-  getVolunteerRequests
+  assignVolunteer,
+  markPickedUp,
+  markDelivered
 } = require('../controllers/requestController');
 
 const { protect } = require('../middlewares/authMiddleware');
@@ -20,5 +23,11 @@ router.route('/donor').get(protect, getDonorRequests);
 router.route('/update-status').put(protect, updateRequestStatus);
 
 router.route('/volunteer').get(protect, getVolunteerRequests);
+
+router.route('/assign').put(protect, assignVolunteer);
+
+router.route('/pickup').put(protect, markPickedUp);
+
+router.route('/deliver').put(protect, markDelivered);
 
 module.exports = router;
