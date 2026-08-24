@@ -4,15 +4,17 @@ const Food = require('../models/Food');
 const addFood = async (req, res) => {
   try {
     const {
-    foodName,
-    quantity,
-    foodType,
-    foodCategory,
-    location,
-    expiryTime,
-    description,
-    image,
-    servesPeople
+      foodName,
+      quantity,
+      foodType,
+      foodCategory,
+      location,
+      latitude,
+      longitude,
+      expiryTime,
+      description,
+      image,
+      servesPeople
     } = req.body;
     // Basic validation
     if (!foodName || !quantity || !location) {
@@ -20,17 +22,19 @@ const addFood = async (req, res) => {
     }
 
     const food = await Food.create({
-  foodName,
-  quantity,
-  foodType,
-  foodCategory,
-  location,
-  expiryTime,
-  description,
-  image,
-  servesPeople,
-  donorId: req.user._id,
-});
+      foodName,
+      quantity,
+      foodType,
+      foodCategory,
+      location,
+      latitude,
+      longitude,
+      expiryTime,
+      description,
+      image,
+      servesPeople,
+      donorId: req.user._id,
+    });
 
     res.status(201).json(food);
   } catch (error) {

@@ -31,21 +31,68 @@ const getMyRequests = async (req, res) => {
 const updateRequestStatus = async (req, res) => {
   try {
     const { requestId, status } = req.body;
+
+    if (!requestId || !status) {
+      return res.status(400).json({
+        message: 'Request ID and status are required'
+      });
+    }
+
     const request = await Request.findById(requestId).populate('foodId');
 
     if (!request) {
-      return res.status(404).json({ message: 'Request not found' });
+      return res.status(404).json({
+        message: 'Request not found'
+      });
     }
 
-    if (request.foodId.donorId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(401).json({ message: 'Not authorized' });
+    if (!request.foodId) {
+      return res.status(404).json({
+        message: 'Food associated with this request not found'
+      });
+    }
+
+    const donorId = request.foodId.donorId?.toString();
+    const currentUserId = req.user._id.toString();
+
+    console.log('DONOR ID:', donorId);
+    console.log('CURRENT USER ID:', currentUserId);
+    console.log('CURRENT USER ROLE:', req.user.role);
+
+    // Only food donor or admin can approve/reject
+    if (
+      donorId !== currentUserId &&
+      req.user.role !== 'admin'
+    ) {
+      return res.status(401).json({
+        message: 'Not authorized to update this request'
+      });
+    }
+
+    // Only allow these status changes from donor dashboard
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({
+        message: 'Invalid status'
+      });
     }
 
     request.status = status;
+
     await request.save();
-    res.json(request);
+
+    const updatedRequest = await Request.findById(requestId)
+      .populate('foodId')
+      .populate('receiverId', 'name email');
+
+    res.json(updatedRequest);
+
   } catch (error) {
-    res.status(500).json({ message: 'Server Error', error: error.message });
+    console.error('UPDATE REQUEST STATUS ERROR:', error);
+
+    res.status(500).json({
+      message: 'Server Error',
+      error: error.message
+    });
   }
 };
 const getVolunteerRequests = async (req, res) => {

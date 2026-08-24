@@ -74,6 +74,16 @@ const VolunteerDashboard = () => {
       );
     }
   };
+  const handleViewLocation = (latitude, longitude) => {
+    if (!latitude || !longitude) {
+      toast.error('Pickup location coordinates are not available');
+      return;
+    }
+
+    const googleMapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+    window.open(googleMapsUrl, '_blank');
+  };
 
   if (loading) {
     return (
@@ -119,6 +129,19 @@ const VolunteerDashboard = () => {
                 <strong>Location:</strong>{' '}
                 {request.foodId?.location}
               </p>
+              {request.foodId?.latitude && request.foodId?.longitude && (
+                <button
+                  onClick={() =>
+                    handleViewLocation(
+                      request.foodId.latitude,
+                      request.foodId.longitude
+                    )
+                  }
+                  className="w-full mt-3 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
+                >
+                  🗺️ View Pickup Location
+                </button>
+              )}
 
               <p className="text-gray-600">
                 <strong>Donor:</strong>{' '}

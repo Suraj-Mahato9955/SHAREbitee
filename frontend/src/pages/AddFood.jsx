@@ -14,6 +14,8 @@ const AddFood = () => {
     foodType: '',
     foodCategory: '',
     location: '',
+    latitude: '',
+    longitude: '',
     expiryTime: '',
     description: '',
     image: '',
@@ -30,9 +32,67 @@ const AddFood = () => {
       [e.target.name]: e.target.value
     });
   };
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+          );
+
+          const data = await response.json();
+
+          const address =
+            data.display_name || 'Current location';
+
+          setFormData(prev => ({
+            ...prev,
+            location: address,
+            latitude,
+            longitude
+          }));
+
+          toast.success('Current location detected! 📍');
+
+        } catch (error) {
+          console.error('ADDRESS ERROR:', error);
+
+          // Coordinates save even if address lookup fails
+          setFormData(prev => ({
+            ...prev,
+            latitude,
+            longitude
+          }));
+
+          toast.warning(
+            'Coordinates detected, but address could not be found.'
+          );
+        }
+      },
+      (error) => {
+        console.error('LOCATION ERROR:', error);
+
+        toast.error(
+          'Unable to get your location. Please allow location access.'
+        );
+      }
+    );
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!formData.latitude || !formData.longitude) {
+      toast.error('Please select your current location 📍');
+      return;
+    }
 
     try {
       await api.post('/food/add', formData);
@@ -40,15 +100,15 @@ const AddFood = () => {
       toast.success('Food listed successfully!');
       navigate('/food');
 
-    
-    } catch (error) {
-  console.log("FOOD ERROR:", error);
-  console.log("SERVER RESPONSE:", error.response?.data);
 
-  toast.error(
-    error.response?.data?.message || 'Failed to add food'
-  );
-}
+    } catch (error) {
+      console.log("FOOD ERROR:", error);
+      console.log("SERVER RESPONSE:", error.response?.data);
+
+      toast.error(
+        error.response?.data?.message || 'Failed to add food'
+      );
+    }
   };
 
   return (
@@ -156,6 +216,13 @@ const AddFood = () => {
             required
             placeholder="e.g., Dhanbad, Jharkhand"
           />
+          <button
+            type="button"
+            onClick={handleGetLocation}
+            className="mt-3 bg-green-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-700 transition"
+          >
+            📍 Use My Current Location
+          </button>
         </div>
 
 

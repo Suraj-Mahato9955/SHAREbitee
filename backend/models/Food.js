@@ -25,6 +25,12 @@ const foodSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  latitude: {
+    type: Number,
+  },
+  longitude: {
+    type: Number,
+  },
 
   expiryTime: {
     type: Date,
