@@ -11,12 +11,14 @@ const getUsers = async (req, res) => {
   }
 };
 
+
 const deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+    
     
     await Food.deleteMany({ donorId: user._id });
     await Request.deleteMany({ receiverId: user._id });
