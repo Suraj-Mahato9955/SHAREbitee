@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-
 import {
   Search,
   Package,
@@ -113,16 +112,13 @@ const NGODashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
 
-      {/* ================= HERO ================= */}
-
+      {/* HERO */}
       <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 text-white">
-
         <div className="max-w-7xl mx-auto px-6 py-10">
 
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
 
             <div>
-
               <p className="text-blue-100 mb-2">
                 NGO Dashboard
               </p>
@@ -135,7 +131,6 @@ const NGODashboard = () => {
                 Find available food donations and help deliver
                 meals to people who need them.
               </p>
-
             </div>
 
             <Link
@@ -149,24 +144,16 @@ const NGODashboard = () => {
           </div>
 
         </div>
-
       </div>
 
-
-      {/* ================= STATISTICS ================= */}
-
+      {/* STATISTICS */}
       <div className="max-w-7xl mx-auto px-6 -mt-6">
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
 
-          {/* Total */}
-
           <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100">
-
             <div className="flex justify-between items-start">
-
               <div>
-
                 <p className="text-gray-500 text-sm">
                   Total Requests
                 </p>
@@ -174,26 +161,17 @@ const NGODashboard = () => {
                 <h2 className="text-3xl font-bold text-gray-800 mt-2">
                   {requests.length}
                 </h2>
-
               </div>
 
               <div className="bg-blue-100 text-blue-600 p-3 rounded-xl">
                 <Package size={22} />
               </div>
-
             </div>
-
           </div>
 
-
-          {/* Pending */}
-
           <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100">
-
             <div className="flex justify-between items-start">
-
               <div>
-
                 <p className="text-gray-500 text-sm">
                   Pending
                 </p>
@@ -201,26 +179,17 @@ const NGODashboard = () => {
                 <h2 className="text-3xl font-bold text-gray-800 mt-2">
                   {pendingRequests}
                 </h2>
-
               </div>
 
               <div className="bg-yellow-100 text-yellow-600 p-3 rounded-xl">
                 <Clock size={22} />
               </div>
-
             </div>
-
           </div>
 
-
-          {/* Approved */}
-
           <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100">
-
             <div className="flex justify-between items-start">
-
               <div>
-
                 <p className="text-gray-500 text-sm">
                   Approved
                 </p>
@@ -228,26 +197,17 @@ const NGODashboard = () => {
                 <h2 className="text-3xl font-bold text-gray-800 mt-2">
                   {approvedRequests}
                 </h2>
-
               </div>
 
               <div className="bg-green-100 text-green-600 p-3 rounded-xl">
                 <CheckCircle size={22} />
               </div>
-
             </div>
-
           </div>
 
-
-          {/* Delivered */}
-
           <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100">
-
             <div className="flex justify-between items-start">
-
               <div>
-
                 <p className="text-gray-500 text-sm">
                   Delivered
                 </p>
@@ -255,27 +215,20 @@ const NGODashboard = () => {
                 <h2 className="text-3xl font-bold text-gray-800 mt-2">
                   {deliveredRequests}
                 </h2>
-
               </div>
 
               <div className="bg-purple-100 text-purple-600 p-3 rounded-xl">
                 <Heart size={22} />
               </div>
-
             </div>
-
           </div>
 
         </div>
 
-
-        {/* ================= MAIN CONTENT ================= */}
-
+        {/* MAIN CONTENT */}
         <div className="grid lg:grid-cols-3 gap-6 mt-8">
 
-
-          {/* REQUEST HISTORY */}
-
+          {/* REQUESTS */}
           <div className="lg:col-span-2">
 
             <div className="bg-white rounded-2xl shadow-md border border-gray-100">
@@ -283,7 +236,6 @@ const NGODashboard = () => {
               <div className="p-6 border-b flex justify-between items-center">
 
                 <div>
-
                   <h2 className="text-xl font-bold text-gray-800">
                     My Food Requests
                   </h2>
@@ -291,7 +243,6 @@ const NGODashboard = () => {
                   <p className="text-sm text-gray-500 mt-1">
                     Track all food requests made by your NGO
                   </p>
-
                 </div>
 
                 <button
@@ -303,7 +254,6 @@ const NGODashboard = () => {
                 </button>
 
               </div>
-
 
               <div className="p-6">
 
@@ -332,8 +282,7 @@ const NGODashboard = () => {
                     </h3>
 
                     <p className="text-gray-500 text-sm mt-1">
-                      Browse available food and request donations
-                      for people in need.
+                      Browse available food and request donations.
                     </p>
 
                     <Link
@@ -362,18 +311,14 @@ const NGODashboard = () => {
                           <div className="flex-1">
 
                             <h3 className="text-lg font-bold text-gray-800">
-                              🍚{' '}
-                              {request.foodId?.foodName ||
-                                'Food Donation'}
+                              🍚 {request.foodId?.foodName || 'Food Donation'}
                             </h3>
-
 
                             <div className="grid sm:grid-cols-2 gap-2 mt-3">
 
                               <p className="text-sm text-gray-500 flex items-center gap-2">
                                 <Package size={16} />
-                                Quantity:{' '}
-                                {request.foodId?.quantity || 'N/A'}
+                                Quantity: {request.foodId?.quantity || 'N/A'}
                               </p>
 
                               <p className="text-sm text-gray-500 flex items-center gap-2">
@@ -385,7 +330,6 @@ const NGODashboard = () => {
 
                           </div>
 
-
                           <div>
 
                             <span
@@ -393,84 +337,52 @@ const NGODashboard = () => {
                                 request.status
                               )}`}
                             >
-
                               {getStatusIcon(request.status)}
-
                               {request.status.replace('_', ' ')}
-
                             </span>
 
                           </div>
 
                         </div>
 
-
-                        {/* STATUS MESSAGE */}
-
                         {request.status === 'pending' && (
-
                           <div className="mt-4 pt-4 border-t">
-
                             <p className="text-sm text-yellow-700 font-medium">
                               ⏳ Waiting for the donor to approve your request.
                             </p>
-
                           </div>
-
                         )}
-
 
                         {request.status === 'approved' && (
-
                           <div className="mt-4 pt-4 border-t">
-
                             <p className="text-sm text-green-700 font-medium">
-                              ✅ Request approved. A volunteer will
-                              pick up the food soon.
+                              ✅ Request approved. A volunteer will pick up the food soon.
                             </p>
-
                           </div>
-
                         )}
-
 
                         {request.status === 'picked_up' && (
-
                           <div className="mt-4 pt-4 border-t">
-
                             <p className="text-sm text-blue-700 font-medium">
-                              🚚 Food has been picked up and is on
-                              the way.
+                              🚚 Food has been picked up and is on the way.
                             </p>
-
                           </div>
-
                         )}
 
-
                         {request.status === 'delivered' && (
-
                           <div className="mt-4 pt-4 border-t">
-
                             <p className="text-sm text-purple-700 font-medium">
                               ❤️ Food has been successfully delivered.
                             </p>
-
                           </div>
-
                         )}
 
-
                         {request.status === 'rejected' && (
-
                           <div className="mt-4 pt-4 border-t">
-
                             <p className="text-sm text-red-700 font-medium">
                               ❌ This request was rejected by the donor.
                             </p>
-
                           </div>
-
                         )}
 
                       </div>
@@ -487,13 +399,8 @@ const NGODashboard = () => {
 
           </div>
 
-
-          {/* ================= SIDE PANEL ================= */}
-
+          {/* SIDE PANEL */}
           <div>
-
-
-            {/* QUICK ACTIONS */}
 
             <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
 
@@ -504,7 +411,6 @@ const NGODashboard = () => {
               <p className="text-sm text-gray-500 mt-1 mb-5">
                 Manage food requests
               </p>
-
 
               <Link
                 to="/food"
@@ -518,7 +424,6 @@ const NGODashboard = () => {
                   </div>
 
                   <div>
-
                     <p className="font-semibold text-gray-800">
                       Find Food
                     </p>
@@ -526,7 +431,6 @@ const NGODashboard = () => {
                     <p className="text-xs text-gray-500">
                       Browse available donations
                     </p>
-
                   </div>
 
                 </div>
@@ -537,7 +441,6 @@ const NGODashboard = () => {
                 />
 
               </Link>
-
 
               <Link
                 to="/my-requests"
@@ -551,7 +454,6 @@ const NGODashboard = () => {
                   </div>
 
                   <div>
-
                     <p className="font-semibold text-gray-800">
                       My Requests
                     </p>
@@ -559,7 +461,6 @@ const NGODashboard = () => {
                     <p className="text-xs text-gray-500">
                       View request history
                     </p>
-
                   </div>
 
                 </div>
@@ -573,9 +474,7 @@ const NGODashboard = () => {
 
             </div>
 
-
-            {/* IMPACT CARD */}
-
+            {/* IMPACT */}
             <div className="mt-6 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl p-6 text-white shadow-md">
 
               <div className="text-3xl mb-3">
@@ -594,15 +493,11 @@ const NGODashboard = () => {
               <div className="mt-5 pt-4 border-t border-blue-400">
 
                 <div className="flex justify-between text-sm">
-
-                  <span>
-                    Rejected Requests
-                  </span>
+                  <span>Rejected Requests</span>
 
                   <span className="font-bold">
                     {rejectedRequests}
                   </span>
-
                 </div>
 
               </div>
