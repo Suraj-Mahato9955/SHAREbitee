@@ -3,19 +3,66 @@ const Request = require('../models/Request');
 const createRequest = async (req, res) => {
   try {
     const { foodId } = req.body;
-    const existingRequest = await Request.findOne({ foodId, receiverId: req.user._id });
 
-    if (existingRequest) {
-      return res.status(400).json({ message: 'You have already requested this food' });
+    if (!foodId) {
+      return res.status(400).json({
+        message: 'Food ID is required'
+      });
     }
 
+    // Check if food exists
+    const Food = require('../models/Food');
+
+    const food = await Food.findById(foodId);
+
+    if (!food) {
+      return res.status(404).json({
+        message: 'Food not found'
+      });
+    }
+
+    // Don't allow request for unavailable food
+    if (food.status !== 'available') {
+      return res.status(400).json({
+        message: 'This food is no longer available'
+      });
+    }
+
+    // Check existing request
+    const existingRequest = await Request.findOne({
+      foodId,
+      receiverId: req.user._id
+    });
+
+    if (existingRequest) {
+      return res.status(400).json({
+        message: 'You have already requested this food'
+      });
+    }
+
+    // Create request
     const request = await Request.create({
       foodId,
       receiverId: req.user._id,
     });
+
     res.status(201).json(request);
+
   } catch (error) {
-    res.status(500).json({ message: 'Server Error', error: error.message });
+
+    // MongoDB duplicate key error
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: 'You have already requested this food'
+      });
+    }
+
+    console.error('CREATE REQUEST ERROR:', error);
+
+    res.status(500).json({
+      message: 'Server Error',
+      error: error.message
+    });
   }
 };
 
