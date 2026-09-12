@@ -10,7 +10,6 @@ const {
 
 const { protect } = require('../middlewares/authMiddleware');
 
-
 // Get logged-in user's notifications
 router.get('/', protect, getMyNotifications);
 
@@ -19,6 +18,5 @@ router.put('/:id/read', protect, markAsRead);
 
 // Mark all notifications as read
 router.put('/read-all', protect, markAllAsRead);
-
 
 module.exports = router;
