@@ -29,6 +29,7 @@ const AdminPanel = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('all');
+  const [stats, setStats] = useState(null);
 
   // =========================
   // FETCH USERS
@@ -49,7 +50,7 @@ const AdminPanel = () => {
 
       toast.error(
         error.response?.data?.message ||
-          'Failed to fetch users'
+        'Failed to fetch users'
       );
     } finally {
       setLoading(false);
@@ -59,7 +60,22 @@ const AdminPanel = () => {
 
   useEffect(() => {
     fetchUsers();
+    fetchStats();
   }, []);
+
+  const fetchStats = async () => {
+    try {
+      const { data } = await api.get('/admin/stats');
+      setStats(data);
+    } catch (error) {
+      console.error('ADMIN STATS ERROR:', error);
+
+      toast.error(
+        error.response?.data?.message ||
+        'Failed to fetch dashboard statistics'
+      );
+    }
+  };
 
   // =========================
   // DELETE USER
@@ -84,7 +100,7 @@ const AdminPanel = () => {
 
       toast.error(
         error.response?.data?.message ||
-          'Failed to delete user'
+        'Failed to delete user'
       );
     }
   };
@@ -99,23 +115,33 @@ const AdminPanel = () => {
   // =========================
   // STATISTICS
   // =========================
-  const totalUsers = users.length;
+  const totalUsers = stats?.users?.total || 0;
 
-  const totalDonors = users.filter(
-    (u) => u.role === 'donor'
-  ).length;
+  const totalDonors = stats?.users?.donors || 0;
 
-  const totalNGOs = users.filter(
-    (u) => u.role === 'ngo'
-  ).length;
+  const totalNGOs = stats?.users?.ngos || 0;
 
-  const totalVolunteers = users.filter(
-    (u) => u.role === 'volunteer'
-  ).length;
+  const totalVolunteers = stats?.users?.volunteers || 0;
 
-  const totalAdmins = users.filter(
-    (u) => u.role === 'admin'
-  ).length;
+  const totalAdmins = stats?.users?.admins || 0;
+
+  const totalFood = stats?.food?.total || 0;
+
+  const availableFood = stats?.food?.available || 0;
+
+  const deliveredFood = stats?.food?.delivered || 0;
+
+  const totalRequests = stats?.requests?.total || 0;
+
+  const pendingRequests = stats?.requests?.pending || 0;
+
+  const approvedRequests = stats?.requests?.approved || 0;
+
+  const pickedUpRequests = stats?.requests?.pickedUp || 0;
+
+  const deliveredRequests = stats?.requests?.delivered || 0;
+
+  const rejectedRequests = stats?.requests?.rejected || 0;
 
   // =========================
   // FILTER USERS
@@ -226,7 +252,16 @@ const AdminPanel = () => {
             </div>
 
             <button
-              onClick={() => fetchUsers(true)}
+              onClick={async () => {
+                setRefreshing(true);
+
+                await Promise.all([
+                  fetchUsers(true),
+                  fetchStats()
+                ]);
+
+                setRefreshing(false);
+              }}
               disabled={refreshing}
               className="flex items-center justify-center gap-2 bg-white text-purple-700 px-5 py-3 rounded-xl font-semibold shadow-lg hover:bg-purple-50 transition disabled:opacity-70"
             >
@@ -356,6 +391,146 @@ const AdminPanel = () => {
           </div>
 
         </div>
+        {/* ================= FOOD & REQUEST STATS ================= */}
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+
+          {/* Total Food */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            <div className="flex justify-between items-center">
+              <div className="bg-orange-100 text-orange-600 p-3 rounded-xl">
+                <Heart size={22} />
+              </div>
+
+              <span className="text-xs font-semibold text-gray-400">
+                FOOD
+              </span>
+            </div>
+
+            <p className="text-3xl font-bold text-gray-800 mt-4">
+              {totalFood}
+            </p>
+
+            <p className="text-sm text-gray-500 mt-1">
+              Total Donations
+            </p>
+          </div>
+
+
+          {/* Available Food */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            <div className="flex justify-between items-center">
+              <div className="bg-green-100 text-green-600 p-3 rounded-xl">
+                <Activity size={22} />
+              </div>
+
+              <span className="text-xs font-semibold text-gray-400">
+                AVAILABLE
+              </span>
+            </div>
+
+            <p className="text-3xl font-bold text-gray-800 mt-4">
+              {availableFood}
+            </p>
+
+            <p className="text-sm text-gray-500 mt-1">
+              Food Available
+            </p>
+          </div>
+
+
+          {/* Total Requests */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            <div className="flex justify-between items-center">
+              <div className="bg-blue-100 text-blue-600 p-3 rounded-xl">
+                <Users size={22} />
+              </div>
+
+              <span className="text-xs font-semibold text-gray-400">
+                REQUESTS
+              </span>
+            </div>
+
+            <p className="text-3xl font-bold text-gray-800 mt-4">
+              {totalRequests}
+            </p>
+
+            <p className="text-sm text-gray-500 mt-1">
+              Total Requests
+            </p>
+          </div>
+
+
+          {/* Delivered */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            <div className="flex justify-between items-center">
+              <div className="bg-purple-100 text-purple-600 p-3 rounded-xl">
+                <Truck size={22} />
+              </div>
+
+              <span className="text-xs font-semibold text-gray-400">
+                SUCCESS
+              </span>
+            </div>
+
+            <p className="text-3xl font-bold text-gray-800 mt-4">
+              {deliveredRequests}
+            </p>
+
+            <p className="text-sm text-gray-500 mt-1">
+              Delivered Requests
+            </p>
+          </div>
+
+        </div>
+        <div className="grid md:grid-cols-5 gap-4 mb-8">
+
+          <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-4">
+            <p className="text-sm text-yellow-700 font-semibold">
+              Pending
+            </p>
+            <p className="text-2xl font-bold text-yellow-800 mt-1">
+              {pendingRequests}
+            </p>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+            <p className="text-sm text-blue-700 font-semibold">
+              Approved
+            </p>
+            <p className="text-2xl font-bold text-blue-800 mt-1">
+              {approvedRequests}
+            </p>
+          </div>
+
+          <div className="bg-orange-50 border border-orange-100 rounded-xl p-4">
+            <p className="text-sm text-orange-700 font-semibold">
+              Picked Up
+            </p>
+            <p className="text-2xl font-bold text-orange-800 mt-1">
+              {pickedUpRequests}
+            </p>
+          </div>
+
+          <div className="bg-green-50 border border-green-100 rounded-xl p-4">
+            <p className="text-sm text-green-700 font-semibold">
+              Delivered
+            </p>
+            <p className="text-2xl font-bold text-green-800 mt-1">
+              {deliveredRequests}
+            </p>
+          </div>
+
+          <div className="bg-red-50 border border-red-100 rounded-xl p-4">
+            <p className="text-sm text-red-700 font-semibold">
+              Rejected
+            </p>
+            <p className="text-2xl font-bold text-red-800 mt-1">
+              {rejectedRequests}
+            </p>
+          </div>
+
+        </div>
 
         {/* ================= OVERVIEW ================= */}
         <div className="grid lg:grid-cols-3 gap-6 mb-8">
@@ -397,11 +572,10 @@ const AdminPanel = () => {
                   <div
                     className="bg-blue-500 h-2.5 rounded-full transition-all"
                     style={{
-                      width: `${
-                        totalUsers
+                      width: `${totalUsers
                           ? (totalDonors / totalUsers) * 100
                           : 0
-                      }%`,
+                        }%`,
                     }}
                   ></div>
                 </div>
@@ -423,11 +597,10 @@ const AdminPanel = () => {
                   <div
                     className="bg-green-500 h-2.5 rounded-full transition-all"
                     style={{
-                      width: `${
-                        totalUsers
+                      width: `${totalUsers
                           ? (totalNGOs / totalUsers) * 100
                           : 0
-                      }%`,
+                        }%`,
                     }}
                   ></div>
                 </div>
@@ -449,12 +622,11 @@ const AdminPanel = () => {
                   <div
                     className="bg-orange-500 h-2.5 rounded-full transition-all"
                     style={{
-                      width: `${
-                        totalUsers
+                      width: `${totalUsers
                           ? (totalVolunteers / totalUsers) *
-                            100
+                          100
                           : 0
-                      }%`,
+                        }%`,
                     }}
                   ></div>
                 </div>
@@ -476,11 +648,10 @@ const AdminPanel = () => {
                   <div
                     className="bg-purple-500 h-2.5 rounded-full transition-all"
                     style={{
-                      width: `${
-                        totalUsers
+                      width: `${totalUsers
                           ? (totalAdmins / totalUsers) * 100
                           : 0
-                      }%`,
+                        }%`,
                     }}
                   ></div>
                 </div>
@@ -715,15 +886,15 @@ const AdminPanel = () => {
 
                           {u.createdAt
                             ? new Date(
-                                u.createdAt
-                              ).toLocaleDateString(
-                                'en-IN',
-                                {
-                                  day: '2-digit',
-                                  month: 'short',
-                                  year: 'numeric',
-                                }
-                              )
+                              u.createdAt
+                            ).toLocaleDateString(
+                              'en-IN',
+                              {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                              }
+                            )
                             : 'N/A'}
                         </div>
 
