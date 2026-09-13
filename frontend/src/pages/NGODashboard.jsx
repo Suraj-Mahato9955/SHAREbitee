@@ -109,16 +109,241 @@ const NGODashboard = () => {
     }
   };
 
+  /*
+    =====================================================
+    DELIVERY TRACKING TIMELINE
+    =====================================================
+  */
+
+  const trackingSteps = [
+    {
+      key: 'pending',
+      label: 'Request Sent',
+      description: 'Your food request has been sent to the donor.',
+      icon: <Package size={18} />
+    },
+    {
+      key: 'approved',
+      label: 'Approved',
+      description: 'The donor has approved your request.',
+      icon: <CheckCircle size={18} />
+    },
+    {
+      key: 'picked_up',
+      label: 'Picked Up',
+      description: 'Volunteer has picked up the food.',
+      icon: <Truck size={18} />
+    },
+    {
+      key: 'delivered',
+      label: 'Delivered',
+      description: 'Food has been delivered successfully.',
+      icon: <Heart size={18} />
+    }
+  ];
+
+  const getStepState = (status, stepIndex) => {
+    const statusOrder = {
+      pending: 0,
+      approved: 1,
+      picked_up: 2,
+      delivered: 3
+    };
+
+    const currentIndex = statusOrder[status];
+
+    if (status === 'rejected') {
+      return 'inactive';
+    }
+
+    if (currentIndex === undefined) {
+      return 'inactive';
+    }
+
+    if (stepIndex < currentIndex) {
+      return 'completed';
+    }
+
+    if (stepIndex === currentIndex) {
+      return 'current';
+    }
+
+    return 'upcoming';
+  };
+
+  const renderTrackingTimeline = request => {
+    if (request.status === 'rejected') {
+      return (
+        <div className="mt-5 pt-5 border-t border-gray-200">
+          <div className="rounded-xl bg-red-50 border border-red-100 p-4">
+
+            <div className="flex items-center gap-3">
+
+              <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
+                <XCircle size={20} />
+              </div>
+
+              <div>
+                <p className="font-bold text-red-700">
+                  Request Rejected
+                </p>
+
+                <p className="text-sm text-red-600 mt-1">
+                  The donor has rejected this food request.
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mt-5 pt-5 border-t border-gray-200">
+
+        <div className="flex items-center justify-between mb-5">
+
+          <div>
+            <h4 className="font-bold text-gray-800">
+              Delivery Tracking
+            </h4>
+
+            <p className="text-xs text-gray-500 mt-1">
+              Track your food request progress
+            </p>
+          </div>
+
+          <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full">
+            Live Status
+          </span>
+
+        </div>
+
+        <div className="relative">
+
+          {/* CONNECTING LINE */}
+
+          <div className="absolute left-5 top-5 bottom-5 w-0.5 bg-gray-200"></div>
+
+          <div className="space-y-5">
+
+            {trackingSteps.map((step, index) => {
+
+              const state = getStepState(
+                request.status,
+                index
+              );
+
+              const isCompleted = state === 'completed';
+              const isCurrent = state === 'current';
+
+              return (
+                <div
+                  key={step.key}
+                  className="relative flex items-start gap-4"
+                >
+
+                  {/* ICON */}
+
+                  <div
+                    className={`
+                      relative z-10 w-10 h-10 rounded-full
+                      flex items-center justify-center
+                      border-4 border-white
+                      transition-all duration-300
+                      ${
+                        isCompleted
+                          ? 'bg-green-500 text-white'
+                          : isCurrent
+                          ? 'bg-blue-600 text-white ring-4 ring-blue-100'
+                          : 'bg-gray-100 text-gray-400'
+                      }
+                    `}
+                  >
+                    {isCompleted ? (
+                      <CheckCircle size={18} />
+                    ) : (
+                      step.icon
+                    )}
+                  </div>
+
+                  {/* CONTENT */}
+
+                  <div className="flex-1 pt-1">
+
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+
+                      <p
+                        className={`
+                          font-semibold
+                          ${
+                            isCompleted
+                              ? 'text-green-700'
+                              : isCurrent
+                              ? 'text-blue-700'
+                              : 'text-gray-400'
+                          }
+                        `}
+                      >
+                        {step.label}
+                      </p>
+
+                      {isCurrent && (
+                        <span className="text-xs font-semibold text-blue-600">
+                          Current
+                        </span>
+                      )}
+
+                      {isCompleted && (
+                        <span className="text-xs font-semibold text-green-600">
+                          Completed
+                        </span>
+                      )}
+
+                    </div>
+
+                    <p
+                      className={`
+                        text-xs mt-1
+                        ${
+                          isCurrent || isCompleted
+                            ? 'text-gray-500'
+                            : 'text-gray-400'
+                        }
+                      `}
+                    >
+                      {step.description}
+                    </p>
+
+                  </div>
+
+                </div>
+              );
+            })}
+
+          </div>
+
+        </div>
+
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
 
       {/* HERO */}
+
       <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 text-white">
+
         <div className="max-w-7xl mx-auto px-6 py-10">
 
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
 
             <div>
+
               <p className="text-blue-100 mb-2">
                 NGO Dashboard
               </p>
@@ -131,6 +356,7 @@ const NGODashboard = () => {
                 Find available food donations and help deliver
                 meals to people who need them.
               </p>
+
             </div>
 
             <Link
@@ -144,16 +370,23 @@ const NGODashboard = () => {
           </div>
 
         </div>
+
       </div>
 
       {/* STATISTICS */}
+
       <div className="max-w-7xl mx-auto px-6 -mt-6">
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
 
+          {/* TOTAL */}
+
           <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100">
+
             <div className="flex justify-between items-start">
+
               <div>
+
                 <p className="text-gray-500 text-sm">
                   Total Requests
                 </p>
@@ -161,17 +394,25 @@ const NGODashboard = () => {
                 <h2 className="text-3xl font-bold text-gray-800 mt-2">
                   {requests.length}
                 </h2>
+
               </div>
 
               <div className="bg-blue-100 text-blue-600 p-3 rounded-xl">
                 <Package size={22} />
               </div>
+
             </div>
+
           </div>
 
+          {/* PENDING */}
+
           <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100">
+
             <div className="flex justify-between items-start">
+
               <div>
+
                 <p className="text-gray-500 text-sm">
                   Pending
                 </p>
@@ -179,17 +420,25 @@ const NGODashboard = () => {
                 <h2 className="text-3xl font-bold text-gray-800 mt-2">
                   {pendingRequests}
                 </h2>
+
               </div>
 
               <div className="bg-yellow-100 text-yellow-600 p-3 rounded-xl">
                 <Clock size={22} />
               </div>
+
             </div>
+
           </div>
 
+          {/* APPROVED */}
+
           <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100">
+
             <div className="flex justify-between items-start">
+
               <div>
+
                 <p className="text-gray-500 text-sm">
                   Approved
                 </p>
@@ -197,17 +446,25 @@ const NGODashboard = () => {
                 <h2 className="text-3xl font-bold text-gray-800 mt-2">
                   {approvedRequests}
                 </h2>
+
               </div>
 
               <div className="bg-green-100 text-green-600 p-3 rounded-xl">
                 <CheckCircle size={22} />
               </div>
+
             </div>
+
           </div>
 
+          {/* DELIVERED */}
+
           <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100">
+
             <div className="flex justify-between items-start">
+
               <div>
+
                 <p className="text-gray-500 text-sm">
                   Delivered
                 </p>
@@ -215,20 +472,25 @@ const NGODashboard = () => {
                 <h2 className="text-3xl font-bold text-gray-800 mt-2">
                   {deliveredRequests}
                 </h2>
+
               </div>
 
               <div className="bg-purple-100 text-purple-600 p-3 rounded-xl">
                 <Heart size={22} />
               </div>
+
             </div>
+
           </div>
 
         </div>
 
         {/* MAIN CONTENT */}
+
         <div className="grid lg:grid-cols-3 gap-6 mt-8">
 
           {/* REQUESTS */}
+
           <div className="lg:col-span-2">
 
             <div className="bg-white rounded-2xl shadow-md border border-gray-100">
@@ -236,6 +498,7 @@ const NGODashboard = () => {
               <div className="p-6 border-b flex justify-between items-center">
 
                 <div>
+
                   <h2 className="text-xl font-bold text-gray-800">
                     My Food Requests
                   </h2>
@@ -243,6 +506,7 @@ const NGODashboard = () => {
                   <p className="text-sm text-gray-500 mt-1">
                     Track all food requests made by your NGO
                   </p>
+
                 </div>
 
                 <button
@@ -297,7 +561,7 @@ const NGODashboard = () => {
 
                 ) : (
 
-                  <div className="space-y-4">
+                  <div className="space-y-5">
 
                     {requests.map(request => (
 
@@ -305,6 +569,8 @@ const NGODashboard = () => {
                         key={request._id}
                         className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition"
                       >
+
+                        {/* REQUEST HEADER */}
 
                         <div className="flex flex-col md:flex-row justify-between gap-4">
 
@@ -333,9 +599,12 @@ const NGODashboard = () => {
                           <div>
 
                             <span
-                              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold capitalize ${getStatusStyle(
-                                request.status
-                              )}`}
+                              className={`
+                                inline-flex items-center gap-2
+                                px-3 py-1.5 rounded-full
+                                text-sm font-semibold capitalize
+                                ${getStatusStyle(request.status)}
+                              `}
                             >
                               {getStatusIcon(request.status)}
                               {request.status.replace('_', ' ')}
@@ -344,6 +613,8 @@ const NGODashboard = () => {
                           </div>
 
                         </div>
+
+                        {/* STATUS MESSAGE */}
 
                         {request.status === 'pending' && (
                           <div className="mt-4 pt-4 border-t">
@@ -385,6 +656,10 @@ const NGODashboard = () => {
                           </div>
                         )}
 
+                        {/* DELIVERY TRACKING */}
+
+                        {renderTrackingTimeline(request)}
+
                       </div>
 
                     ))}
@@ -400,6 +675,7 @@ const NGODashboard = () => {
           </div>
 
           {/* SIDE PANEL */}
+
           <div>
 
             <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
@@ -424,6 +700,7 @@ const NGODashboard = () => {
                   </div>
 
                   <div>
+
                     <p className="font-semibold text-gray-800">
                       Find Food
                     </p>
@@ -431,6 +708,7 @@ const NGODashboard = () => {
                     <p className="text-xs text-gray-500">
                       Browse available donations
                     </p>
+
                   </div>
 
                 </div>
@@ -454,6 +732,7 @@ const NGODashboard = () => {
                   </div>
 
                   <div>
+
                     <p className="font-semibold text-gray-800">
                       My Requests
                     </p>
@@ -461,6 +740,7 @@ const NGODashboard = () => {
                     <p className="text-xs text-gray-500">
                       View request history
                     </p>
+
                   </div>
 
                 </div>
@@ -475,6 +755,7 @@ const NGODashboard = () => {
             </div>
 
             {/* IMPACT */}
+
             <div className="mt-6 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl p-6 text-white shadow-md">
 
               <div className="text-3xl mb-3">
@@ -493,11 +774,15 @@ const NGODashboard = () => {
               <div className="mt-5 pt-4 border-t border-blue-400">
 
                 <div className="flex justify-between text-sm">
-                  <span>Rejected Requests</span>
+
+                  <span>
+                    Rejected Requests
+                  </span>
 
                   <span className="font-bold">
                     {rejectedRequests}
                   </span>
+
                 </div>
 
               </div>
