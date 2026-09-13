@@ -14,7 +14,10 @@ const Login = () => {
     e.preventDefault();
     try {
       const { data } = await api.post('/auth/login', { email, password });
-      login(data);
+      login({
+        ...data.user,
+        token: data.token
+      });
       toast.success('Logged in successfully!');
       navigate('/dashboard');
     } catch (error) {
@@ -28,28 +31,28 @@ const Login = () => {
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label className="block text-gray-700 font-medium mb-2">Email Address</label>
-          <input 
-            type="email" 
+          <input
+            type="email"
             className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50 focus:bg-white transition"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required 
+            required
             placeholder="you@example.com"
           />
         </div>
         <div>
           <label className="block text-gray-700 font-medium mb-2">Password</label>
-          <input 
-            type="password" 
+          <input
+            type="password"
             className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50 focus:bg-white transition"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required 
+            required
             placeholder="••••••••"
           />
         </div>
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-secondary transition shadow-md"
         >
           Log In

@@ -1,4 +1,5 @@
 const Request = require('../models/Request');
+const Notification = require('../models/Notification');
 
 const createRequest = async (req, res) => {
   try {
@@ -10,7 +11,6 @@ const createRequest = async (req, res) => {
       });
     }
 
-    // Check if food exists
     const Food = require('../models/Food');
 
     const food = await Food.findById(foodId);
@@ -21,14 +21,12 @@ const createRequest = async (req, res) => {
       });
     }
 
-    // Don't allow request for unavailable food
     if (food.status !== 'available') {
       return res.status(400).json({
         message: 'This food is no longer available'
       });
     }
 
-    // Check existing request
     const existingRequest = await Request.findOne({
       foodId,
       receiverId: req.user._id
@@ -40,17 +38,23 @@ const createRequest = async (req, res) => {
       });
     }
 
-    // Create request
     const request = await Request.create({
       foodId,
       receiverId: req.user._id,
+    });
+
+    // Notify donor
+    await Notification.create({
+      userId: food.donorId,
+      message: `${req.user.name} has requested your food "${food.foodName}"`,
+      type: 'request',
+      requestId: request._id
     });
 
     res.status(201).json(request);
 
   } catch (error) {
 
-    // MongoDB duplicate key error
     if (error.code === 11000) {
       return res.status(400).json({
         message: 'You have already requested this food'
@@ -66,14 +70,24 @@ const createRequest = async (req, res) => {
   }
 };
 
+
 const getMyRequests = async (req, res) => {
   try {
-    const requests = await Request.find({ receiverId: req.user._id }).populate('foodId');
+    const requests = await Request.find({
+      receiverId: req.user._id
+    }).populate('foodId');
+
     res.json(requests);
+
   } catch (error) {
-    res.status(500).json({ message: 'Server Error', error: error.message });
+
+    res.status(500).json({
+      message: 'Server Error',
+      error: error.message
+    });
   }
 };
+
 
 const updateRequestStatus = async (req, res) => {
   try {
@@ -85,7 +99,8 @@ const updateRequestStatus = async (req, res) => {
       });
     }
 
-    const request = await Request.findById(requestId).populate('foodId');
+    const request = await Request.findById(requestId)
+      .populate('foodId');
 
     if (!request) {
       return res.status(404).json({
@@ -102,11 +117,6 @@ const updateRequestStatus = async (req, res) => {
     const donorId = request.foodId.donorId?.toString();
     const currentUserId = req.user._id.toString();
 
-    console.log('DONOR ID:', donorId);
-    console.log('CURRENT USER ID:', currentUserId);
-    console.log('CURRENT USER ROLE:', req.user.role);
-
-    // Only food donor or admin can approve/reject
     if (
       donorId !== currentUserId &&
       req.user.role !== 'admin'
@@ -116,7 +126,6 @@ const updateRequestStatus = async (req, res) => {
       });
     }
 
-    // Only allow these status changes from donor dashboard
     if (!['approved', 'rejected'].includes(status)) {
       return res.status(400).json({
         message: 'Invalid status'
@@ -127,6 +136,19 @@ const updateRequestStatus = async (req, res) => {
 
     await request.save();
 
+    // Notify NGO
+    const notificationMessage =
+      status === 'approved'
+        ? `Your food request for "${request.foodId.foodName}" has been approved`
+        : `Your food request for "${request.foodId.foodName}" has been rejected`;
+
+    await Notification.create({
+      userId: request.receiverId,
+      message: notificationMessage,
+      type: status,
+      requestId: request._id
+    });
+
     const updatedRequest = await Request.findById(requestId)
       .populate('foodId')
       .populate('receiverId', 'name email');
@@ -134,6 +156,7 @@ const updateRequestStatus = async (req, res) => {
     res.json(updatedRequest);
 
   } catch (error) {
+
     console.error('UPDATE REQUEST STATUS ERROR:', error);
 
     res.status(500).json({
@@ -142,8 +165,11 @@ const updateRequestStatus = async (req, res) => {
     });
   }
 };
+
+
 const getVolunteerRequests = async (req, res) => {
   try {
+
     const requests = await Request.find({
       $or: [
         { status: 'approved' },
@@ -164,6 +190,7 @@ const getVolunteerRequests = async (req, res) => {
     res.json(requests);
 
   } catch (error) {
+
     console.error('VOLUNTEER REQUEST ERROR:', error);
 
     res.status(500).json({
@@ -172,11 +199,16 @@ const getVolunteerRequests = async (req, res) => {
     });
   }
 };
+
+
 const assignVolunteer = async (req, res) => {
   try {
+
     const { requestId } = req.body;
 
-    const request = await Request.findById(requestId);
+    const request = await Request.findById(requestId)
+      .populate('foodId')
+      .populate('receiverId', 'name');
 
     if (!request) {
       return res.status(404).json({
@@ -201,9 +233,18 @@ const assignVolunteer = async (req, res) => {
 
     await request.save();
 
+    // Notify NGO
+    await Notification.create({
+      userId: request.receiverId._id,
+      message: `Volunteer ${req.user.name} has accepted the pickup for "${request.foodId.foodName}"`,
+      type: 'pickup',
+      requestId: request._id
+    });
+
     res.status(200).json(request);
 
   } catch (error) {
+
     console.error('ASSIGN VOLUNTEER ERROR:', error);
 
     res.status(500).json({
@@ -216,9 +257,11 @@ const assignVolunteer = async (req, res) => {
 
 const markPickedUp = async (req, res) => {
   try {
+
     const { requestId } = req.body;
 
-    const request = await Request.findById(requestId);
+    const request = await Request.findById(requestId)
+      .populate('foodId');
 
     if (!request) {
       return res.status(404).json({
@@ -239,9 +282,18 @@ const markPickedUp = async (req, res) => {
 
     await request.save();
 
+    // Notify NGO
+    await Notification.create({
+      userId: request.receiverId,
+      message: `Food "${request.foodId.foodName}" has been picked up by volunteer ${req.user.name}`,
+      type: 'pickup',
+      requestId: request._id
+    });
+
     res.status(200).json(request);
 
   } catch (error) {
+
     console.error('PICKUP ERROR:', error);
 
     res.status(500).json({
@@ -254,9 +306,11 @@ const markPickedUp = async (req, res) => {
 
 const markDelivered = async (req, res) => {
   try {
+
     const { requestId } = req.body;
 
-    const request = await Request.findById(requestId);
+    const request = await Request.findById(requestId)
+      .populate('foodId');
 
     if (!request) {
       return res.status(404).json({
@@ -277,9 +331,26 @@ const markDelivered = async (req, res) => {
 
     await request.save();
 
+    // Notify NGO
+    await Notification.create({
+      userId: request.receiverId,
+      message: `Food "${request.foodId.foodName}" has been delivered successfully`,
+      type: 'delivered',
+      requestId: request._id
+    });
+
+    // Notify Donor
+    await Notification.create({
+      userId: request.foodId.donorId,
+      message: `Your food "${request.foodId.foodName}" has been delivered successfully`,
+      type: 'delivered',
+      requestId: request._id
+    });
+
     res.status(200).json(request);
 
   } catch (error) {
+
     console.error('DELIVERY ERROR:', error);
 
     res.status(500).json({
@@ -288,8 +359,11 @@ const markDelivered = async (req, res) => {
     });
   }
 };
+
+
 const getDonorRequests = async (req, res) => {
   try {
+
     const requests = await Request.find()
       .populate({
         path: 'foodId',
@@ -301,6 +375,7 @@ const getDonorRequests = async (req, res) => {
       .populate('receiverId', 'name email');
 
     const donorRequests = requests.filter((request) => {
+
       if (!request.foodId || !request.foodId.donorId) {
         return false;
       }
@@ -314,6 +389,7 @@ const getDonorRequests = async (req, res) => {
     res.status(200).json(donorRequests);
 
   } catch (error) {
+
     console.error('GET DONOR REQUESTS ERROR:', error);
 
     res.status(500).json({
@@ -322,6 +398,8 @@ const getDonorRequests = async (req, res) => {
     });
   }
 };
+
+
 module.exports = {
   createRequest,
   getMyRequests,
