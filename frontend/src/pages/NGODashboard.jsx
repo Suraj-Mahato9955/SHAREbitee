@@ -11,7 +11,8 @@ import {
   Heart,
   MapPin,
   Utensils,
-  RefreshCw
+  RefreshCw,
+  Users
 } from 'lucide-react';
 
 import { AuthContext } from '../context/AuthContext';
@@ -24,6 +25,10 @@ const NGODashboard = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // =========================================
+  // FETCH NGO REQUESTS
+  // =========================================
+
   const fetchRequests = async () => {
     try {
       setLoading(true);
@@ -31,6 +36,7 @@ const NGODashboard = () => {
       const { data } = await api.get('/request/my');
 
       setRequests(data);
+
     } catch (error) {
       console.error('NGO REQUEST ERROR:', error);
 
@@ -38,6 +44,7 @@ const NGODashboard = () => {
         error.response?.data?.message ||
         'Failed to load your requests'
       );
+
     } finally {
       setLoading(false);
     }
@@ -48,6 +55,10 @@ const NGODashboard = () => {
       fetchRequests();
     }
   }, [user]);
+
+  // =========================================
+  // REQUEST STATISTICS
+  // =========================================
 
   const pendingRequests = requests.filter(
     request => request.status === 'pending'
@@ -64,6 +75,30 @@ const NGODashboard = () => {
   const rejectedRequests = requests.filter(
     request => request.status === 'rejected'
   ).length;
+
+  // =========================================
+  // IMPACT STATISTICS
+  // =========================================
+
+  // Total people served through delivered food
+  const peopleServed = requests
+    .filter(request => request.status === 'delivered')
+    .reduce(
+      (total, request) =>
+        total + (Number(request.foodId?.servesPeople) || 0),
+      0
+    );
+
+  // Active deliveries
+  const activeDeliveries = requests.filter(
+    request =>
+      request.status === 'approved' ||
+      request.status === 'picked_up'
+  ).length;
+
+  // =========================================
+  // STATUS STYLE
+  // =========================================
 
   const getStatusStyle = status => {
     switch (status) {
@@ -86,6 +121,10 @@ const NGODashboard = () => {
         return 'bg-gray-100 text-gray-700';
     }
   };
+
+  // =========================================
+  // STATUS ICON
+  // =========================================
 
   const getStatusIcon = status => {
     switch (status) {
@@ -171,10 +210,15 @@ const NGODashboard = () => {
     return 'upcoming';
   };
 
+  // =========================================
+  // TRACKING TIMELINE
+  // =========================================
+
   const renderTrackingTimeline = request => {
     if (request.status === 'rejected') {
       return (
         <div className="mt-5 pt-5 border-t border-gray-200">
+
           <div className="rounded-xl bg-red-50 border border-red-100 p-4">
 
             <div className="flex items-center gap-3">
@@ -184,6 +228,7 @@ const NGODashboard = () => {
               </div>
 
               <div>
+
                 <p className="font-bold text-red-700">
                   Request Rejected
                 </p>
@@ -191,11 +236,13 @@ const NGODashboard = () => {
                 <p className="text-sm text-red-600 mt-1">
                   The donor has rejected this food request.
                 </p>
+
               </div>
 
             </div>
 
           </div>
+
         </div>
       );
     }
@@ -206,6 +253,7 @@ const NGODashboard = () => {
         <div className="flex items-center justify-between mb-5">
 
           <div>
+
             <h4 className="font-bold text-gray-800">
               Delivery Tracking
             </h4>
@@ -213,6 +261,7 @@ const NGODashboard = () => {
             <p className="text-xs text-gray-500 mt-1">
               Track your food request progress
             </p>
+
           </div>
 
           <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full">
@@ -262,11 +311,13 @@ const NGODashboard = () => {
                       }
                     `}
                   >
+
                     {isCompleted ? (
                       <CheckCircle size={18} />
                     ) : (
                       step.icon
                     )}
+
                   </div>
 
                   {/* CONTENT */}
@@ -334,7 +385,9 @@ const NGODashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
 
-      {/* HERO */}
+      {/* =========================================
+          HERO
+      ========================================= */}
 
       <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 text-white">
 
@@ -373,7 +426,10 @@ const NGODashboard = () => {
 
       </div>
 
-      {/* STATISTICS */}
+
+      {/* =========================================
+          STATISTICS
+      ========================================= */}
 
       <div className="max-w-7xl mx-auto px-6 -mt-6">
 
@@ -405,6 +461,7 @@ const NGODashboard = () => {
 
           </div>
 
+
           {/* PENDING */}
 
           <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100">
@@ -431,6 +488,7 @@ const NGODashboard = () => {
 
           </div>
 
+
           {/* APPROVED */}
 
           <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100">
@@ -456,6 +514,7 @@ const NGODashboard = () => {
             </div>
 
           </div>
+
 
           {/* DELIVERED */}
 
@@ -485,7 +544,10 @@ const NGODashboard = () => {
 
         </div>
 
-        {/* MAIN CONTENT */}
+
+        {/* =========================================
+            MAIN CONTENT
+        ========================================= */}
 
         <div className="grid lg:grid-cols-3 gap-6 mt-8">
 
@@ -518,6 +580,7 @@ const NGODashboard = () => {
                 </button>
 
               </div>
+
 
               <div className="p-6">
 
@@ -606,55 +669,74 @@ const NGODashboard = () => {
                                 ${getStatusStyle(request.status)}
                               `}
                             >
+
                               {getStatusIcon(request.status)}
+
                               {request.status.replace('_', ' ')}
+
                             </span>
 
                           </div>
 
                         </div>
 
+
                         {/* STATUS MESSAGE */}
 
                         {request.status === 'pending' && (
                           <div className="mt-4 pt-4 border-t">
+
                             <p className="text-sm text-yellow-700 font-medium">
                               ⏳ Waiting for the donor to approve your request.
                             </p>
+
                           </div>
                         )}
+
 
                         {request.status === 'approved' && (
                           <div className="mt-4 pt-4 border-t">
+
                             <p className="text-sm text-green-700 font-medium">
                               ✅ Request approved. A volunteer will pick up the food soon.
                             </p>
+
                           </div>
                         )}
+
 
                         {request.status === 'picked_up' && (
                           <div className="mt-4 pt-4 border-t">
+
                             <p className="text-sm text-blue-700 font-medium">
                               🚚 Food has been picked up and is on the way.
                             </p>
+
                           </div>
                         )}
+
 
                         {request.status === 'delivered' && (
                           <div className="mt-4 pt-4 border-t">
+
                             <p className="text-sm text-purple-700 font-medium">
                               ❤️ Food has been successfully delivered.
                             </p>
+
                           </div>
                         )}
 
+
                         {request.status === 'rejected' && (
                           <div className="mt-4 pt-4 border-t">
+
                             <p className="text-sm text-red-700 font-medium">
                               ❌ This request was rejected by the donor.
                             </p>
+
                           </div>
                         )}
+
 
                         {/* DELIVERY TRACKING */}
 
@@ -674,9 +756,14 @@ const NGODashboard = () => {
 
           </div>
 
-          {/* SIDE PANEL */}
+
+          {/* =========================================
+              SIDE PANEL
+          ========================================= */}
 
           <div>
+
+            {/* QUICK ACTIONS */}
 
             <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
 
@@ -687,6 +774,9 @@ const NGODashboard = () => {
               <p className="text-sm text-gray-500 mt-1 mb-5">
                 Manage food requests
               </p>
+
+
+              {/* FIND FOOD */}
 
               <Link
                 to="/food"
@@ -719,6 +809,9 @@ const NGODashboard = () => {
                 />
 
               </Link>
+
+
+              {/* MY REQUESTS */}
 
               <Link
                 to="/my-requests"
@@ -754,28 +847,133 @@ const NGODashboard = () => {
 
             </div>
 
-            {/* IMPACT */}
+
+            {/* =====================================
+                COMMUNITY IMPACT
+            ===================================== */}
 
             <div className="mt-6 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl p-6 text-white shadow-md">
 
-              <div className="text-3xl mb-3">
-                ❤️
+              {/* HEADER */}
+
+              <div className="flex items-center gap-3">
+
+                <div className="bg-white/20 p-3 rounded-xl">
+                  <Heart size={24} />
+                </div>
+
+                <div>
+
+                  <h3 className="text-xl font-bold">
+                    Community Impact
+                  </h3>
+
+                  <p className="text-blue-100 text-sm">
+                    Your NGO is making a difference.
+                  </p>
+
+                </div>
+
               </div>
 
-              <h3 className="text-xl font-bold">
-                Community Impact
-              </h3>
 
-              <p className="text-blue-100 text-sm mt-2">
-                Your organization helps connect surplus food
-                with people who need it.
-              </p>
+              {/* IMPACT STATS */}
 
-              <div className="mt-5 pt-4 border-t border-blue-400">
+              <div className="grid grid-cols-2 gap-3 mt-6">
+
+                {/* TOTAL REQUESTS */}
+
+                <div className="bg-white/10 rounded-xl p-4">
+
+                  <div className="flex items-center gap-2">
+
+                    <Package size={17} />
+
+                    <p className="text-blue-100 text-xs">
+                      Requests
+                    </p>
+
+                  </div>
+
+                  <p className="text-2xl font-bold mt-2">
+                    {requests.length}
+                  </p>
+
+                </div>
+
+
+                {/* PEOPLE SERVED */}
+
+                <div className="bg-white/10 rounded-xl p-4">
+
+                  <div className="flex items-center gap-2">
+
+                    <Users size={17} />
+
+                    <p className="text-blue-100 text-xs">
+                      People Served
+                    </p>
+
+                  </div>
+
+                  <p className="text-2xl font-bold mt-2">
+                    {peopleServed}
+                  </p>
+
+                </div>
+
+
+                {/* FOOD RECEIVED */}
+
+                <div className="bg-white/10 rounded-xl p-4">
+
+                  <div className="flex items-center gap-2">
+
+                    <Heart size={17} />
+
+                    <p className="text-blue-100 text-xs">
+                      Food Received
+                    </p>
+
+                  </div>
+
+                  <p className="text-2xl font-bold mt-2">
+                    {deliveredRequests}
+                  </p>
+
+                </div>
+
+
+                {/* ACTIVE DELIVERIES */}
+
+                <div className="bg-white/10 rounded-xl p-4">
+
+                  <div className="flex items-center gap-2">
+
+                    <Truck size={17} />
+
+                    <p className="text-blue-100 text-xs">
+                      Active
+                    </p>
+
+                  </div>
+
+                  <p className="text-2xl font-bold mt-2">
+                    {activeDeliveries}
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              {/* REJECTED */}
+
+              <div className="mt-5 pt-4 border-t border-white/20">
 
                 <div className="flex justify-between text-sm">
 
-                  <span>
+                  <span className="text-blue-100">
                     Rejected Requests
                   </span>
 
