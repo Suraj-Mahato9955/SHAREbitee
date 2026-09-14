@@ -22,13 +22,21 @@ const DonorDashboard = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ==============================
+  // FETCH DONOR REQUESTS
+  // ==============================
+
   const fetchRequests = async () => {
     try {
       const { data } = await api.get('/request/donor');
       setRequests(data);
     } catch (error) {
       console.error('DONOR REQUEST ERROR:', error);
-      toast.error('Failed to load requests');
+
+      toast.error(
+        error.response?.data?.message ||
+        'Failed to load requests'
+      );
     } finally {
       setLoading(false);
     }
@@ -39,6 +47,10 @@ const DonorDashboard = () => {
       fetchRequests();
     }
   }, [user]);
+
+  // ==============================
+  // UPDATE REQUEST STATUS
+  // ==============================
 
   const updateRequestStatus = async (requestId, status) => {
     try {
@@ -54,6 +66,7 @@ const DonorDashboard = () => {
       );
 
       fetchRequests();
+
     } catch (error) {
       console.error('STATUS ERROR:', error);
 
@@ -63,6 +76,10 @@ const DonorDashboard = () => {
       );
     }
   };
+
+  // ==============================
+  // REQUEST STATISTICS
+  // ==============================
 
   const pendingRequests = requests.filter(
     request => request.status === 'pending'
@@ -80,16 +97,48 @@ const DonorDashboard = () => {
     request => request.status === 'rejected'
   ).length;
 
+  // ==============================
+  // IMPACT STATISTICS
+  // ==============================
+
+  // Unique food donations
+  const totalDonations = new Set(
+    requests
+      .map(request => request.foodId?._id)
+      .filter(Boolean)
+  ).size;
+
+  // People served through successfully delivered food
+  const deliveredPeople = requests
+    .filter(request => request.status === 'delivered')
+    .reduce(
+      (total, request) =>
+        total + (Number(request.foodId?.servesPeople) || 0),
+      0
+    );
+
+  // Currently active donations
+  const activeDonations = requests.filter(
+    request =>
+      request.status === 'approved' ||
+      request.status === 'picked_up'
+  ).length;
+
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
 
-      {/* HERO */}
+      {/* =========================================
+          HERO SECTION
+      ========================================= */}
+
       <div className="bg-gradient-to-r from-green-700 via-green-600 to-emerald-500 text-white">
+
         <div className="max-w-7xl mx-auto px-6 py-10">
 
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
 
             <div>
+
               <p className="text-green-100 mb-2">
                 Donor Dashboard
               </p>
@@ -102,6 +151,7 @@ const DonorDashboard = () => {
                 Your food donation can make someone's day better.
                 Keep making a difference with SHAREbite.
               </p>
+
             </div>
 
             <Link
@@ -115,99 +165,152 @@ const DonorDashboard = () => {
           </div>
 
         </div>
+
       </div>
 
 
+      {/* =========================================
+          MAIN CONTAINER
+      ========================================= */}
+
       <div className="max-w-7xl mx-auto px-6 -mt-6">
 
-        {/* STATISTICS */}
+        {/* =========================================
+            TOP STATISTICS
+        ========================================= */}
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
 
+          {/* TOTAL REQUESTS */}
+
           <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100">
+
             <div className="flex justify-between items-start">
+
               <div>
+
                 <p className="text-gray-500 text-sm">
                   Total Requests
                 </p>
+
                 <h2 className="text-3xl font-bold text-gray-800 mt-2">
                   {requests.length}
                 </h2>
+
               </div>
 
               <div className="bg-blue-100 text-blue-600 p-3 rounded-xl">
                 <Package size={22} />
               </div>
+
             </div>
+
           </div>
 
 
+          {/* PENDING */}
+
           <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100">
+
             <div className="flex justify-between items-start">
+
               <div>
+
                 <p className="text-gray-500 text-sm">
                   Pending
                 </p>
+
                 <h2 className="text-3xl font-bold text-gray-800 mt-2">
                   {pendingRequests}
                 </h2>
+
               </div>
 
               <div className="bg-yellow-100 text-yellow-600 p-3 rounded-xl">
                 <Clock size={22} />
               </div>
+
             </div>
+
           </div>
 
 
+          {/* APPROVED */}
+
           <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100">
+
             <div className="flex justify-between items-start">
+
               <div>
+
                 <p className="text-gray-500 text-sm">
                   Approved
                 </p>
+
                 <h2 className="text-3xl font-bold text-gray-800 mt-2">
                   {approvedRequests}
                 </h2>
+
               </div>
 
               <div className="bg-green-100 text-green-600 p-3 rounded-xl">
                 <CheckCircle size={22} />
               </div>
+
             </div>
+
           </div>
 
 
+          {/* DELIVERED */}
+
           <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100">
+
             <div className="flex justify-between items-start">
+
               <div>
+
                 <p className="text-gray-500 text-sm">
                   Delivered
                 </p>
+
                 <h2 className="text-3xl font-bold text-gray-800 mt-2">
                   {deliveredRequests}
                 </h2>
+
               </div>
 
               <div className="bg-purple-100 text-purple-600 p-3 rounded-xl">
                 <Truck size={22} />
               </div>
+
             </div>
+
           </div>
 
         </div>
 
 
-        {/* MAIN CONTENT */}
+        {/* =========================================
+            MAIN CONTENT
+        ========================================= */}
+
         <div className="grid lg:grid-cols-3 gap-6 mt-8">
 
-          {/* REQUESTS */}
+          {/* =====================================
+              REQUESTS SECTION
+          ===================================== */}
+
           <div className="lg:col-span-2">
 
             <div className="bg-white rounded-2xl shadow-md border border-gray-100">
 
+              {/* HEADER */}
+
               <div className="p-6 border-b flex justify-between items-center">
 
                 <div>
+
                   <h2 className="text-xl font-bold text-gray-800">
                     Food Requests
                   </h2>
@@ -215,6 +318,7 @@ const DonorDashboard = () => {
                   <p className="text-sm text-gray-500 mt-1">
                     Manage requests for your donations
                   </p>
+
                 </div>
 
                 <div className="bg-green-100 text-green-700 p-3 rounded-xl">
@@ -224,24 +328,34 @@ const DonorDashboard = () => {
               </div>
 
 
+              {/* REQUEST CONTENT */}
+
               <div className="p-6">
+
+                {/* LOADING */}
 
                 {loading ? (
 
                   <div className="text-center py-10">
+
                     <div className="animate-spin w-8 h-8 border-4 border-green-200 border-t-green-600 rounded-full mx-auto"></div>
 
                     <p className="text-gray-500 mt-3">
                       Loading requests...
                     </p>
+
                   </div>
 
                 ) : requests.length === 0 ? (
 
+                  /* NO REQUESTS */
+
                   <div className="text-center py-12">
 
                     <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center text-gray-400">
+
                       <UtensilsCrossed size={34} />
+
                     </div>
 
                     <h3 className="text-lg font-semibold text-gray-700 mt-4">
@@ -256,6 +370,8 @@ const DonorDashboard = () => {
 
                 ) : (
 
+                  /* REQUEST LIST */
+
                   <div className="space-y-4">
 
                     {requests.map(request => (
@@ -264,6 +380,8 @@ const DonorDashboard = () => {
                         key={request._id}
                         className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition"
                       >
+
+                        {/* REQUEST HEADER */}
 
                         <div className="flex flex-col md:flex-row justify-between gap-4">
 
@@ -274,10 +392,13 @@ const DonorDashboard = () => {
                             </h3>
 
                             <p className="text-gray-500 text-sm mt-1">
+
                               Requested by{' '}
+
                               <span className="font-semibold text-gray-700">
                                 {request.receiverId?.name || 'NGO'}
                               </span>
+
                             </p>
 
                             <p className="text-gray-500 text-sm mt-1">
@@ -286,6 +407,8 @@ const DonorDashboard = () => {
 
                           </div>
 
+
+                          {/* STATUS */}
 
                           <div>
 
@@ -312,7 +435,9 @@ const DonorDashboard = () => {
                         </div>
 
 
-                        {/* ACTIONS */}
+                        {/* =================================
+                            ACTIONS
+                        ================================= */}
 
                         {request.status === 'pending' && (
 
@@ -327,10 +452,15 @@ const DonorDashboard = () => {
                               }
                               className="flex-1 bg-green-600 text-white py-2.5 rounded-lg font-semibold hover:bg-green-700 transition"
                             >
+
                               <span className="flex items-center justify-center gap-2">
+
                                 <CheckCircle size={18} />
+
                                 Approve
+
                               </span>
+
                             </button>
 
 
@@ -343,10 +473,15 @@ const DonorDashboard = () => {
                               }
                               className="flex-1 bg-red-50 text-red-600 border border-red-200 py-2.5 rounded-lg font-semibold hover:bg-red-100 transition"
                             >
+
                               <span className="flex items-center justify-center gap-2">
+
                                 <XCircle size={18} />
+
                                 Reject
+
                               </span>
+
                             </button>
 
                           </div>
@@ -354,27 +489,37 @@ const DonorDashboard = () => {
                         )}
 
 
+                        {/* APPROVED */}
+
                         {request.status === 'approved' && (
 
                           <div className="mt-4 pt-4 border-t">
 
                             <div className="flex items-center gap-2 text-green-700 text-sm font-medium">
+
                               <CheckCircle size={18} />
+
                               Approved — waiting for volunteer pickup
+
                             </div>
 
                           </div>
 
                         )}
 
+
+                        {/* PICKED UP */}
 
                         {request.status === 'picked_up' && (
 
                           <div className="mt-4 pt-4 border-t">
 
                             <div className="flex items-center gap-2 text-blue-700 text-sm font-medium">
+
                               <Truck size={18} />
+
                               Food has been picked up
+
                             </div>
 
                           </div>
@@ -382,13 +527,18 @@ const DonorDashboard = () => {
                         )}
 
 
+                        {/* DELIVERED */}
+
                         {request.status === 'delivered' && (
 
                           <div className="mt-4 pt-4 border-t">
 
                             <div className="flex items-center gap-2 text-purple-700 text-sm font-medium">
+
                               <CheckCircle size={18} />
+
                               Food successfully delivered
+
                             </div>
 
                           </div>
@@ -410,9 +560,15 @@ const DonorDashboard = () => {
           </div>
 
 
-          {/* QUICK ACTIONS */}
+          {/* =========================================
+              RIGHT SIDEBAR
+          ========================================= */}
 
           <div>
+
+            {/* =====================================
+                QUICK ACTIONS
+            ===================================== */}
 
             <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
 
@@ -424,6 +580,8 @@ const DonorDashboard = () => {
                 Manage your donations
               </p>
 
+
+              {/* DONATE FOOD */}
 
               <Link
                 to="/add-food"
@@ -437,6 +595,7 @@ const DonorDashboard = () => {
                   </div>
 
                   <div>
+
                     <p className="font-semibold text-gray-800">
                       Donate Food
                     </p>
@@ -444,6 +603,7 @@ const DonorDashboard = () => {
                     <p className="text-xs text-gray-500">
                       Create a new donation
                     </p>
+
                   </div>
 
                 </div>
@@ -455,6 +615,8 @@ const DonorDashboard = () => {
 
               </Link>
 
+
+              {/* FOOD LISTINGS */}
 
               <Link
                 to="/food"
@@ -468,6 +630,7 @@ const DonorDashboard = () => {
                   </div>
 
                   <div>
+
                     <p className="font-semibold text-gray-800">
                       Food Listings
                     </p>
@@ -475,6 +638,7 @@ const DonorDashboard = () => {
                     <p className="text-xs text-gray-500">
                       View all donations
                     </p>
+
                   </div>
 
                 </div>
@@ -489,30 +653,115 @@ const DonorDashboard = () => {
             </div>
 
 
-            {/* IMPACT CARD */}
+            {/* =====================================
+                IMPACT CARD
+            ===================================== */}
 
             <div className="mt-6 bg-gradient-to-br from-green-600 to-emerald-500 rounded-2xl p-6 text-white shadow-md">
 
-              <div className="text-3xl mb-3">
-                ❤️
+              {/* IMPACT HEADER */}
+
+              <div className="flex items-center gap-3">
+
+                <div className="bg-white/20 p-3 rounded-xl">
+                  <UtensilsCrossed size={24} />
+                </div>
+
+                <div>
+
+                  <h3 className="text-xl font-bold">
+                    Your Impact
+                  </h3>
+
+                  <p className="text-green-100 text-sm">
+                    Your contribution is making a difference.
+                  </p>
+
+                </div>
+
               </div>
 
-              <h3 className="text-xl font-bold">
-                Your Impact
-              </h3>
 
-              <p className="text-green-100 text-sm mt-2">
-                Every donation helps reduce food waste and
-                supports people who need a meal.
-              </p>
+              {/* IMPACT STATISTICS */}
 
-              <div className="mt-5 pt-4 border-t border-green-400">
+              <div className="grid grid-cols-2 gap-3 mt-6">
+
+                {/* DONATIONS */}
+
+                <div className="bg-white/10 rounded-xl p-4">
+
+                  <p className="text-green-100 text-xs">
+                    Donations
+                  </p>
+
+                  <p className="text-2xl font-bold mt-1">
+                    {totalDonations}
+                  </p>
+
+                </div>
+
+
+                {/* PEOPLE SERVED */}
+
+                <div className="bg-white/10 rounded-xl p-4">
+
+                  <p className="text-green-100 text-xs">
+                    People Served
+                  </p>
+
+                  <p className="text-2xl font-bold mt-1">
+                    {deliveredPeople}
+                  </p>
+
+                </div>
+
+
+                {/* DELIVERED */}
+
+                <div className="bg-white/10 rounded-xl p-4">
+
+                  <p className="text-green-100 text-xs">
+                    Delivered
+                  </p>
+
+                  <p className="text-2xl font-bold mt-1">
+                    {deliveredRequests}
+                  </p>
+
+                </div>
+
+
+                {/* ACTIVE */}
+
+                <div className="bg-white/10 rounded-xl p-4">
+
+                  <p className="text-green-100 text-xs">
+                    Active
+                  </p>
+
+                  <p className="text-2xl font-bold mt-1">
+                    {activeDonations}
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              {/* REJECTED REQUESTS */}
+
+              <div className="mt-5 pt-4 border-t border-white/20">
 
                 <div className="flex justify-between text-sm">
-                  <span>Rejected Requests</span>
+
+                  <span className="text-green-100">
+                    Rejected Requests
+                  </span>
+
                   <span className="font-bold">
                     {rejectedRequests}
                   </span>
+
                 </div>
 
               </div>
