@@ -8,6 +8,7 @@ export const AuthProvider = ({ children }) => {
 
   // Restore login after page refresh
   useEffect(() => {
+    
     try {
       const userInfo = localStorage.getItem('userInfo');
 
