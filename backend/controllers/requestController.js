@@ -169,12 +169,21 @@ const updateRequestStatus = async (req, res) => {
 
 const getVolunteerRequests = async (req, res) => {
   try {
-
     const requests = await Request.find({
       $or: [
-        { status: 'approved' },
-        { status: 'picked_up' },
-        { status: 'delivered' }
+        // New approved requests available for any volunteer
+        {
+          status: 'approved',
+          volunteerId: null
+        },
+
+        // Requests already assigned to the logged-in volunteer
+        {
+          volunteerId: req.user._id,
+          status: {
+            $in: ['approved', 'picked_up', 'delivered']
+          }
+        }
       ]
     })
       .populate({
@@ -185,12 +194,12 @@ const getVolunteerRequests = async (req, res) => {
         }
       })
       .populate('receiverId', 'name email')
-      .populate('volunteerId', 'name email');
+      .populate('volunteerId', 'name email')
+      .sort({ createdAt: -1 });
 
-    res.json(requests);
+    res.status(200).json(requests);
 
   } catch (error) {
-
     console.error('VOLUNTEER REQUEST ERROR:', error);
 
     res.status(500).json({
