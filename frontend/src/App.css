@@ -2,37 +2,49 @@
    SHAREBITE - GLOBAL APP STYLES
 ========================================================= */
 
-/* Smooth scrolling */
+/* =========================
+   ROOT & DOCUMENT
+========================= */
+
 html {
   scroll-behavior: smooth;
 }
 
-/* Main app wrapper */
 #root {
   min-height: 100vh;
 }
 
-/* Better button interaction */
+body {
+  margin: 0;
+}
+
+/* =========================
+   ELEMENT DEFAULTS
+========================= */
+
 button,
 a {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Remove default button outline */
 button {
   font-family: inherit;
+  cursor: pointer;
 }
 
-/* Better input styling */
 input,
 textarea,
 select {
   font-family: inherit;
 }
 
-/* Custom scrollbar */
+/* =========================
+   CUSTOM SCROLLBAR
+========================= */
+
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -48,14 +60,17 @@ select {
   background: #64748b;
 }
 
-/* Selection color */
+/* =========================
+   TEXT SELECTION
+========================= */
+
 ::selection {
-  background: rgba(22, 163, 74, 0.2);
+  background: rgba(22, 163, 74, 0.18);
 }
 
-/* =========================================================
+/* =========================
    COMMON ANIMATIONS
-========================================================= */
+========================= */
 
 @keyframes fadeIn {
   from {
@@ -91,7 +106,6 @@ select {
   }
 }
 
-/* Utility animation classes */
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out;
 }
@@ -104,9 +118,9 @@ select {
   animation: scaleIn 0.3s ease-out;
 }
 
-/* =========================================================
-   COMMON CARD EFFECT
-========================================================= */
+/* =========================
+   COMMON CARD
+========================= */
 
 .sharebite-card {
   transition:
@@ -116,37 +130,140 @@ select {
 }
 
 .sharebite-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
 }
 
-/* =========================================================
+/* =========================
    PAGE CONTAINER
-========================================================= */
+========================= */
 
 .page-container {
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 @media (min-width: 640px) {
   .page-container {
-    padding: 0 1.5rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
 }
 
 @media (min-width: 1024px) {
   .page-container {
-    padding: 0 2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
   }
 }
 
-/* =========================================================
-   MOBILE IMPROVEMENTS
-========================================================= */
+/* =========================
+   CARD HOVER
+========================= */
+
+.card-hover {
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-3px);
+}
+
+/* =========================
+   FORM FOCUS
+========================= */
+
+input,
+textarea,
+select {
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+}
+
+/* =========================
+   PAGE BACKGROUND
+========================= */
+
+.app-background {
+  min-height: 100vh;
+
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(22, 163, 74, 0.06),
+      transparent 30%
+    ),
+    #f8fafc;
+}
+
+/* =========================
+   PAGE ANIMATION
+========================= */
+
+@keyframes pageFade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-animation {
+  animation: pageFade 0.35s ease-out;
+}
+
+/* =========================
+   LOADING SPINNER
+========================= */
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.custom-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* =========================
+   FOCUS ACCESSIBILITY
+========================= */
+
+:focus-visible {
+  outline: 2px solid #16a34a;
+  outline-offset: 2px;
+}
+
+/* =========================
+   MOBILE
+========================= */
 
 @media (max-width: 640px) {
+  body {
+    overflow-x: hidden;
+  }
+
   h1 {
     line-height: 1.15;
   }
@@ -160,16 +277,10 @@ select {
   }
 }
 
-/* =========================================================
-   ACCESSIBILITY
-========================================================= */
+/* =========================
+   REDUCED MOTION
+========================= */
 
-:focus-visible {
-  outline: 2px solid #16a34a;
-  outline-offset: 2px;
-}
-
-/* Respect reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
