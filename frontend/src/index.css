@@ -1,5 +1,5 @@
 /* =========================================================
-   SHAREBITE - GLOBAL STYLES
+   SHAREBITE - GLOBAL BASE STYLES
 ========================================================= */
 
 @tailwind base;
@@ -16,9 +16,14 @@
   }
 
   body {
-    @apply bg-gray-50 text-gray-900 antialiased font-sans;
+    @apply bg-slate-50 text-slate-900 antialiased font-sans;
+
     margin: 0;
     min-width: 320px;
+  }
+
+  #root {
+    min-height: 100vh;
   }
 
   h1,
@@ -44,6 +49,11 @@
   a {
     text-decoration: none;
   }
+
+  img {
+    max-width: 100%;
+    display: block;
+  }
 }
 
 /* =========================================================
@@ -53,117 +63,34 @@
 input,
 textarea,
 select {
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background-color 0.2s ease;
+  @apply text-slate-900;
 }
 
-input:focus,
-textarea:focus,
-select:focus {
-  outline: none;
+input::placeholder,
+textarea::placeholder {
+  @apply text-slate-400;
 }
 
 /* =========================================================
-   PAGE BACKGROUND
+   APP BACKGROUND
 ========================================================= */
 
-.app-background {
-  min-height: 100vh;
-  background:
-    radial-gradient(
-      circle at top left,
-      rgba(22, 163, 74, 0.06),
-      transparent 30%
-    ),
-    #f8fafc;
-}
+@layer components {
+  .app-background {
+    min-height: 100vh;
 
-/* =========================================================
-   SMOOTH CARD EFFECT
-========================================================= */
-
-.card-hover {
-  transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease;
-}
-
-.card-hover:hover {
-  transform: translateY(-3px);
-}
-
-/* =========================================================
-   LOADING SPINNER
-========================================================= */
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
+    background:
+      radial-gradient(
+        circle at top left,
+        rgba(22, 163, 74, 0.06),
+        transparent 30%
+      ),
+      #f8fafc;
   }
 }
 
-.custom-spin {
-  animation: spin 1s linear infinite;
-}
-
 /* =========================================================
-   FADE ANIMATION
-========================================================= */
-
-@keyframes pageFade {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.page-animation {
-  animation: pageFade 0.35s ease-out;
-}
-
-/* =========================================================
-   SCROLLBAR
-========================================================= */
-
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #94a3b8;
-  border-radius: 999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
-}
-
-/* =========================================================
-   SELECTION
-========================================================= */
-
-::selection {
-  background: rgba(22, 163, 74, 0.18);
-}
-
-/* =========================================================
-   MOBILE
+   RESPONSIVE
 ========================================================= */
 
 @media (max-width: 640px) {
