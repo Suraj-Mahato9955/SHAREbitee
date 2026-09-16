@@ -14,6 +14,7 @@ import {
   TrendingUp,
   Sparkles,
   MapPin,
+  RefreshCw,
 } from 'lucide-react';
 
 import { AuthContext } from '../context/AuthContext';
@@ -25,21 +26,25 @@ const DonorDashboard = () => {
 
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [updatingRequest, setUpdatingRequest] = useState(null);
 
-  // ==============================
-  // FETCH DONOR REQUESTS
-  // ==============================
+  // =========================================================
+  // FETCH REQUESTS
+  // =========================================================
 
   const fetchRequests = async () => {
     try {
+      setLoading(true);
+
       const { data } = await api.get('/request/donor');
+
       setRequests(data);
     } catch (error) {
       console.error('DONOR REQUEST ERROR:', error);
 
       toast.error(
         error.response?.data?.message ||
-        'Failed to load requests'
+          'Failed to load requests'
       );
     } finally {
       setLoading(false);
@@ -52,12 +57,14 @@ const DonorDashboard = () => {
     }
   }, [user]);
 
-  // ==============================
-  // UPDATE REQUEST STATUS
-  // ==============================
+  // =========================================================
+  // UPDATE REQUEST
+  // =========================================================
 
   const updateRequestStatus = async (requestId, status) => {
     try {
+      setUpdatingRequest(requestId);
+
       await api.put('/request/update-status', {
         requestId,
         status,
@@ -65,24 +72,26 @@ const DonorDashboard = () => {
 
       toast.success(
         status === 'approved'
-          ? 'Request approved successfully!'
+          ? 'Request approved successfully! 🎉'
           : 'Request rejected'
       );
 
-      fetchRequests();
+      await fetchRequests();
     } catch (error) {
       console.error('STATUS ERROR:', error);
 
       toast.error(
         error.response?.data?.message ||
-        'Failed to update request'
+          'Failed to update request'
       );
+    } finally {
+      setUpdatingRequest(null);
     }
   };
 
-  // ==============================
-  // REQUEST STATISTICS
-  // ==============================
+  // =========================================================
+  // STATISTICS
+  // =========================================================
 
   const pendingRequests = requests.filter(
     (request) => request.status === 'pending'
@@ -90,6 +99,12 @@ const DonorDashboard = () => {
 
   const approvedRequests = requests.filter(
     (request) => request.status === 'approved'
+  ).length;
+
+  const pickedUpRequests = requests.filter(
+    (request) =>
+      request.status === 'picked_up' ||
+      request.status === 'pickedup'
   ).length;
 
   const deliveredRequests = requests.filter(
@@ -100,9 +115,9 @@ const DonorDashboard = () => {
     (request) => request.status === 'rejected'
   ).length;
 
-  // ==============================
-  // IMPACT STATISTICS
-  // ==============================
+  // =========================================================
+  // IMPACT
+  // =========================================================
 
   const totalDonations = new Set(
     requests
@@ -114,84 +129,111 @@ const DonorDashboard = () => {
     .filter((request) => request.status === 'delivered')
     .reduce(
       (total, request) =>
-        total + (Number(request.foodId?.servesPeople) || 0),
+        total +
+        (Number(request.foodId?.servesPeople) || 0),
       0
     );
 
   const activeDonations = requests.filter(
     (request) =>
       request.status === 'approved' ||
-      request.status === 'picked_up'
+      request.status === 'picked_up' ||
+      request.status === 'pickedup'
   ).length;
 
-  // ==============================
-  // STATUS HELPERS
-  // ==============================
+  // =========================================================
+  // STATUS
+  // =========================================================
 
-  const getStatusStyle = (status) => {
+  const getStatusInfo = (status) => {
     switch (status) {
-      case 'pending':
-        return 'bg-amber-50 text-amber-700 border-amber-200';
-
       case 'approved':
-        return 'bg-green-50 text-green-700 border-green-200';
+        return {
+          label: 'Approved',
+          icon: <CheckCircle size={14} />,
+          style:
+            'bg-emerald-50 text-emerald-700 border-emerald-100',
+        };
 
       case 'rejected':
-        return 'bg-red-50 text-red-700 border-red-200';
+        return {
+          label: 'Rejected',
+          icon: <XCircle size={14} />,
+          style:
+            'bg-red-50 text-red-700 border-red-100',
+        };
 
       case 'picked_up':
-        return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'pickedup':
+        return {
+          label: 'Picked Up',
+          icon: <Truck size={14} />,
+          style:
+            'bg-blue-50 text-blue-700 border-blue-100',
+        };
 
       case 'delivered':
-        return 'bg-purple-50 text-purple-700 border-purple-200';
+        return {
+          label: 'Delivered',
+          icon: <CheckCircle size={14} />,
+          style:
+            'bg-purple-50 text-purple-700 border-purple-100',
+        };
 
       default:
-        return 'bg-gray-50 text-gray-700 border-gray-200';
+        return {
+          label: 'Pending',
+          icon: <Clock size={14} />,
+          style:
+            'bg-amber-50 text-amber-700 border-amber-100',
+        };
     }
   };
 
-  const getStatusIcon = (status) => {
+  // =========================================================
+  // PROGRESS
+  // =========================================================
+
+  const getProgress = (status) => {
     switch (status) {
-      case 'pending':
-        return <Clock size={14} />;
-
       case 'approved':
-        return <CheckCircle size={14} />;
-
-      case 'rejected':
-        return <XCircle size={14} />;
+        return 50;
 
       case 'picked_up':
-        return <Truck size={14} />;
+      case 'pickedup':
+        return 75;
 
       case 'delivered':
-        return <CheckCircle size={14} />;
+        return 100;
+
+      case 'rejected':
+        return 0;
 
       default:
-        return <Package size={14} />;
+        return 25;
     }
   };
+
+  // =========================================================
+  // RENDER
+  // =========================================================
 
   return (
     <div className="min-h-screen bg-slate-50 pb-16">
 
       {/* =====================================================
           HERO
-      ===================================================== */}
+      ====================================================== */}
 
       <section className="relative overflow-hidden bg-gradient-to-br from-green-800 via-green-700 to-emerald-600 text-white">
 
-        {/* Decorative circles */}
+        <div className="absolute -top-28 -right-20 w-80 h-80 rounded-full bg-white/10 blur-2xl" />
 
-        <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-white/10 blur-2xl" />
+        <div className="absolute -bottom-40 left-1/3 w-96 h-96 rounded-full bg-emerald-300/10 blur-3xl" />
 
-        <div className="absolute -bottom-32 left-1/3 w-80 h-80 rounded-full bg-emerald-300/10 blur-3xl" />
+        <div className="relative max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-12 lg:py-16">
 
-        <div className="relative max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-12 lg:py-14">
-
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-
-            {/* Hero text */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
 
             <div className="max-w-2xl">
 
@@ -205,23 +247,19 @@ const DonorDashboard = () => {
               </h1>
 
               <p className="text-green-50/90 mt-4 text-base sm:text-lg leading-relaxed max-w-xl">
-                Every donation helps turn surplus food into meaningful
-                support for someone who needs it.
+                Your generosity helps turn surplus food into
+                meaningful support for people and communities.
               </p>
 
-              <div className="flex flex-wrap items-center gap-4 mt-6 text-sm text-green-100">
+              <div className="flex flex-wrap gap-3 mt-6">
 
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-                    <TrendingUp size={16} />
-                  </div>
+                <div className="inline-flex items-center gap-2 bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-sm">
+                  <TrendingUp size={16} />
                   Making an impact
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-                    <Users size={16} />
-                  </div>
+                <div className="inline-flex items-center gap-2 bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-sm">
+                  <Users size={16} />
                   Helping communities
                 </div>
 
@@ -229,11 +267,9 @@ const DonorDashboard = () => {
 
             </div>
 
-            {/* Donate button */}
-
             <Link
               to="/add-food"
-              className="inline-flex items-center justify-center gap-2 bg-white text-green-700 px-6 py-3.5 rounded-xl font-bold shadow-xl hover:bg-green-50 hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-2 bg-white text-green-700 px-6 py-3.5 rounded-xl font-bold shadow-xl hover:bg-green-50 hover:-translate-y-0.5 transition-all whitespace-nowrap"
             >
               <Plus size={20} />
               Donate Food
@@ -244,38 +280,35 @@ const DonorDashboard = () => {
         </div>
       </section>
 
-
       {/* =====================================================
           MAIN
-      ===================================================== */}
+      ====================================================== */}
 
       <main className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
 
         {/* =====================================================
-            STATISTICS
-        ===================================================== */}
+            STATS
+        ====================================================== */}
 
         <section className="-mt-6 relative z-10">
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
 
-            {/* Total */}
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-lg shadow-slate-200/40 hover:-translate-y-1 transition-all">
 
-            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-lg shadow-slate-200/40 hover:-translate-y-1 transition-all duration-200">
-
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start justify-between">
 
                 <div>
                   <p className="text-sm text-slate-500">
                     Total Requests
                   </p>
 
-                  <p className="text-3xl font-bold text-slate-800 mt-2">
-                    {requests.length}
+                  <p className="text-3xl font-bold text-slate-900 mt-2">
+                    {loading ? '—' : requests.length}
                   </p>
 
                   <p className="text-xs text-slate-400 mt-2">
-                    All food requests
+                    All incoming requests
                   </p>
                 </div>
 
@@ -287,20 +320,17 @@ const DonorDashboard = () => {
 
             </div>
 
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-lg shadow-slate-200/40 hover:-translate-y-1 transition-all">
 
-            {/* Pending */}
-
-            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-lg shadow-slate-200/40 hover:-translate-y-1 transition-all duration-200">
-
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start justify-between">
 
                 <div>
                   <p className="text-sm text-slate-500">
                     Pending
                   </p>
 
-                  <p className="text-3xl font-bold text-slate-800 mt-2">
-                    {pendingRequests}
+                  <p className="text-3xl font-bold text-slate-900 mt-2">
+                    {loading ? '—' : pendingRequests}
                   </p>
 
                   <p className="text-xs text-slate-400 mt-2">
@@ -316,58 +346,52 @@ const DonorDashboard = () => {
 
             </div>
 
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-lg shadow-slate-200/40 hover:-translate-y-1 transition-all">
 
-            {/* Approved */}
-
-            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-lg shadow-slate-200/40 hover:-translate-y-1 transition-all duration-200">
-
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start justify-between">
 
                 <div>
                   <p className="text-sm text-slate-500">
-                    Approved
+                    Active
                   </p>
 
-                  <p className="text-3xl font-bold text-slate-800 mt-2">
-                    {approvedRequests}
+                  <p className="text-3xl font-bold text-slate-900 mt-2">
+                    {loading ? '—' : activeDonations}
                   </p>
 
                   <p className="text-xs text-slate-400 mt-2">
-                    Awaiting pickup
+                    Approved / pickup
                   </p>
                 </div>
 
                 <div className="w-11 h-11 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
-                  <CheckCircle size={21} />
+                  <Truck size={21} />
                 </div>
 
               </div>
 
             </div>
 
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-lg shadow-slate-200/40 hover:-translate-y-1 transition-all">
 
-            {/* Delivered */}
-
-            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-lg shadow-slate-200/40 hover:-translate-y-1 transition-all duration-200">
-
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start justify-between">
 
                 <div>
                   <p className="text-sm text-slate-500">
                     Delivered
                   </p>
 
-                  <p className="text-3xl font-bold text-slate-800 mt-2">
-                    {deliveredRequests}
+                  <p className="text-3xl font-bold text-slate-900 mt-2">
+                    {loading ? '—' : deliveredRequests}
                   </p>
 
                   <p className="text-xs text-slate-400 mt-2">
-                    Successfully delivered
+                    Successfully completed
                   </p>
                 </div>
 
                 <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                  <Truck size={21} />
+                  <CheckCircle size={21} />
                 </div>
 
               </div>
@@ -378,10 +402,9 @@ const DonorDashboard = () => {
 
         </section>
 
-
         {/* =====================================================
-            CONTENT
-        ===================================================== */}
+            REQUESTS + SIDEBAR
+        ====================================================== */}
 
         <div className="grid lg:grid-cols-3 gap-6 mt-8">
 
@@ -391,67 +414,98 @@ const DonorDashboard = () => {
 
           <section className="lg:col-span-2">
 
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
 
-              {/* Header */}
+              {/* HEADER */}
 
-              <div className="px-5 sm:px-6 py-5 border-b border-slate-100">
+              <div className="px-5 sm:px-7 py-6 border-b border-slate-100">
 
                 <div className="flex items-center justify-between gap-4">
 
                   <div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
 
-                      <div className="w-9 h-9 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
-                        <Bell size={18} />
+                      <div className="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
+                        <Bell size={19} />
                       </div>
 
-                      <h2 className="text-xl font-bold text-slate-800">
-                        Food Requests
-                      </h2>
+                      <div>
+                        <h2 className="text-xl font-bold text-slate-900">
+                          Food Requests
+                        </h2>
+
+                        <p className="text-sm text-slate-500 mt-0.5">
+                          Review and manage requests for your donations.
+                        </p>
+                      </div>
 
                     </div>
 
-                    <p className="text-sm text-slate-500 mt-2">
-                      Review and manage requests for your donations.
-                    </p>
-
                   </div>
 
-                  {requests.length > 0 && (
-                    <span className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold">
-                      {requests.length} request
-                      {requests.length !== 1 ? 's' : ''}
-                    </span>
-                  )}
+                  <button
+                    onClick={fetchRequests}
+                    disabled={loading}
+                    className="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-green-50 hover:text-green-600 transition disabled:opacity-50"
+                    title="Refresh requests"
+                  >
+                    <RefreshCw
+                      size={17}
+                      className={loading ? 'animate-spin' : ''}
+                    />
+                  </button>
 
                 </div>
 
               </div>
 
+              {/* CONTENT */}
 
-              {/* Content */}
-
-              <div className="p-5 sm:p-6">
-
-                {/* Loading */}
+              <div className="p-5 sm:p-7">
 
                 {loading ? (
 
-                  <div className="py-14 text-center">
+                  <div className="space-y-4">
 
-                    <div className="w-11 h-11 border-4 border-green-100 border-t-green-600 rounded-full animate-spin mx-auto" />
+                    {[1, 2, 3].map((item) => (
 
-                    <p className="text-slate-500 mt-4 text-sm">
-                      Loading your requests...
-                    </p>
+                      <div
+                        key={item}
+                        className="animate-pulse border border-slate-100 rounded-2xl p-5"
+                      >
+
+                        <div className="flex justify-between gap-4">
+
+                          <div className="flex gap-3">
+
+                            <div className="w-11 h-11 bg-slate-200 rounded-xl" />
+
+                            <div>
+                              <div className="h-5 bg-slate-200 rounded w-40 mb-2" />
+                              <div className="h-4 bg-slate-200 rounded w-28" />
+                            </div>
+
+                          </div>
+
+                          <div className="h-7 bg-slate-200 rounded-full w-20" />
+
+                        </div>
+
+                        <div className="grid sm:grid-cols-2 gap-3 mt-5">
+
+                          <div className="h-16 bg-slate-100 rounded-xl" />
+                          <div className="h-16 bg-slate-100 rounded-xl" />
+
+                        </div>
+
+                      </div>
+
+                    ))}
 
                   </div>
 
                 ) : requests.length === 0 ? (
-
-                  /* Empty */
 
                   <div className="py-14 text-center">
 
@@ -459,18 +513,18 @@ const DonorDashboard = () => {
                       <UtensilsCrossed size={34} />
                     </div>
 
-                    <h3 className="text-lg font-bold text-slate-800 mt-5">
+                    <h3 className="text-xl font-bold text-slate-800 mt-5">
                       No requests yet
                     </h3>
 
-                    <p className="text-sm text-slate-500 mt-2 max-w-sm mx-auto">
-                      Once an NGO requests one of your food donations,
-                      the request will appear here.
+                    <p className="text-sm text-slate-500 mt-2 max-w-sm mx-auto leading-relaxed">
+                      Once an NGO requests one of your food
+                      donations, the request will appear here.
                     </p>
 
                     <Link
                       to="/add-food"
-                      className="inline-flex items-center gap-2 mt-6 bg-green-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-green-700 transition"
+                      className="inline-flex items-center gap-2 mt-6 bg-green-600 text-white px-5 py-3 rounded-xl font-semibold hover:bg-green-700 transition shadow-md"
                     >
                       <Plus size={18} />
                       Create Donation
@@ -480,32 +534,41 @@ const DonorDashboard = () => {
 
                 ) : (
 
-                  /* Requests */
-
                   <div className="space-y-4">
 
-                    {requests.map((request) => (
+                    {requests.map((request) => {
 
-                      <article
-                        key={request._id}
-                        className="group rounded-2xl border border-slate-200 p-5 hover:border-green-200 hover:shadow-md transition-all duration-200"
-                      >
+                      const statusInfo = getStatusInfo(
+                        request.status
+                      );
 
-                        {/* Request top */}
+                      const progress = getProgress(
+                        request.status
+                      );
 
-                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                      const isUpdating =
+                        updatingRequest === request._id;
 
-                          <div className="min-w-0">
+                      return (
 
-                            <div className="flex items-start gap-3">
+                        <article
+                          key={request._id}
+                          className="group border border-slate-200 rounded-2xl p-5 hover:border-green-200 hover:shadow-lg transition-all duration-300"
+                        >
 
-                              <div className="w-11 h-11 shrink-0 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
-                                <UtensilsCrossed size={20} />
+                          {/* TOP */}
+
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+
+                            <div className="flex items-start gap-3 min-w-0">
+
+                              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-50 to-emerald-100 text-green-600 flex items-center justify-center shrink-0">
+                                <UtensilsCrossed size={21} />
                               </div>
 
                               <div className="min-w-0">
 
-                                <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">
+                                <h3 className="text-lg font-bold text-slate-900 truncate">
                                   {request.foodId?.foodName ||
                                     'Food Donation'}
                                 </h3>
@@ -513,8 +576,67 @@ const DonorDashboard = () => {
                                 <p className="text-sm text-slate-500 mt-1">
                                   Requested by{' '}
                                   <span className="font-semibold text-slate-700">
-                                    {request.receiverId?.name || 'NGO'}
+                                    {request.receiverId?.name ||
+                                      'NGO'}
                                   </span>
+                                </p>
+
+                              </div>
+
+                            </div>
+
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold w-fit capitalize ${statusInfo.style}`}
+                            >
+                              {statusInfo.icon}
+                              {statusInfo.label}
+                            </span>
+
+                          </div>
+
+                          {/* DETAILS */}
+
+                          <div className="grid sm:grid-cols-2 gap-3 mt-5">
+
+                            <div className="flex items-center gap-3 p-3.5 rounded-xl bg-slate-50">
+
+                              <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center text-slate-500 shadow-sm">
+                                <Package size={17} />
+                              </div>
+
+                              <div className="min-w-0">
+
+                                <p className="text-[11px] uppercase tracking-wide text-slate-400 font-bold">
+                                  Quantity
+                                </p>
+
+                                <p className="text-sm font-semibold text-slate-700 mt-0.5 truncate">
+                                  {request.foodId?.quantity ||
+                                    'N/A'}
+                                </p>
+
+                              </div>
+
+                            </div>
+
+                            <div className="flex items-center gap-3 p-3.5 rounded-xl bg-slate-50">
+
+                              <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center text-slate-500 shadow-sm">
+                                <MapPin size={17} />
+                              </div>
+
+                              <div className="min-w-0">
+
+                                <p className="text-[11px] uppercase tracking-wide text-slate-400 font-bold">
+                                  Pickup Location
+                                </p>
+
+                                <p
+                                  className="text-sm font-semibold text-slate-700 mt-0.5 truncate"
+                                  title={request.foodId?.location}
+                                >
+                                  {request.foodId?.location ||
+                                    'N/A'}
                                 </p>
 
                               </div>
@@ -523,168 +645,247 @@ const DonorDashboard = () => {
 
                           </div>
 
+                          {/* PROGRESS */}
 
-                          {/* Status */}
+                          {request.status !== 'rejected' && (
 
-                          <span
-                            className={`inline-flex items-center gap-1.5 self-start px-3 py-1.5 rounded-full border text-xs font-bold capitalize ${getStatusStyle(
-                              request.status
-                            )}`}
-                          >
-                            {getStatusIcon(request.status)}
-                            {request.status.replace('_', ' ')}
-                          </span>
+                            <div className="mt-5">
 
-                        </div>
+                              <div className="flex items-center justify-between mb-2">
 
+                                <span className="text-xs font-semibold text-slate-500">
+                                  Delivery Progress
+                                </span>
 
-                        {/* Details */}
+                                <span className="text-xs font-bold text-green-600">
+                                  {progress}%
+                                </span>
 
-                        <div className="grid sm:grid-cols-2 gap-3 mt-5">
-
-                          <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50">
-
-                            <Package
-                              size={17}
-                              className="text-slate-500 shrink-0"
-                            />
-
-                            <div>
-                              <p className="text-[11px] uppercase tracking-wide text-slate-400 font-semibold">
-                                Quantity
-                              </p>
-
-                              <p className="text-sm font-semibold text-slate-700 mt-0.5">
-                                {request.foodId?.quantity || 'N/A'}
-                              </p>
-                            </div>
-
-                          </div>
-
-                          <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50">
-
-                            <MapPin
-                              size={17}
-                              className="text-slate-500 shrink-0"
-                            />
-
-                            <div>
-                              <p className="text-[11px] uppercase tracking-wide text-slate-400 font-semibold">
-                                Donation Location
-                              </p>
-
-                              <p className="text-sm font-semibold text-slate-700 mt-0.5 truncate">
-                                {request.foodId?.location || 'N/A'}
-                              </p>
-                            </div>
-
-                          </div>
-
-                        </div>
-
-
-                        {/* Actions */}
-
-                        {request.status === 'pending' && (
-
-                          <div className="flex flex-col sm:flex-row gap-3 mt-5 pt-5 border-t border-slate-100">
-
-                            <button
-                              onClick={() =>
-                                updateRequestStatus(
-                                  request._id,
-                                  'approved'
-                                )
-                              }
-                              className="flex-1 inline-flex items-center justify-center gap-2 bg-green-600 text-white py-2.5 px-4 rounded-xl font-semibold hover:bg-green-700 hover:shadow-md transition-all"
-                            >
-                              <CheckCircle size={18} />
-                              Approve Request
-                            </button>
-
-                            <button
-                              onClick={() =>
-                                updateRequestStatus(
-                                  request._id,
-                                  'rejected'
-                                )
-                              }
-                              className="flex-1 inline-flex items-center justify-center gap-2 bg-white text-red-600 border border-red-200 py-2.5 px-4 rounded-xl font-semibold hover:bg-red-50 transition-all"
-                            >
-                              <XCircle size={18} />
-                              Reject
-                            </button>
-
-                          </div>
-
-                        )}
-
-
-                        {/* Approved */}
-
-                        {request.status === 'approved' && (
-
-                          <div className="mt-5 pt-4 border-t border-slate-100">
-
-                            <div className="flex items-center gap-2 text-green-700 text-sm font-semibold">
-
-                              <div className="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center">
-                                <CheckCircle size={16} />
                               </div>
 
-                              Approved — waiting for volunteer pickup
+                              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
 
-                            </div>
+                                <div
+                                  className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-500"
+                                  style={{
+                                    width: `${progress}%`,
+                                  }}
+                                />
 
-                          </div>
-
-                        )}
-
-
-                        {/* Picked up */}
-
-                        {request.status === 'picked_up' && (
-
-                          <div className="mt-5 pt-4 border-t border-slate-100">
-
-                            <div className="flex items-center gap-2 text-blue-700 text-sm font-semibold">
-
-                              <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center">
-                                <Truck size={16} />
                               </div>
 
-                              Food has been picked up and is on the way
+                              <div className="grid grid-cols-4 mt-2 text-[10px] sm:text-xs text-slate-400">
 
-                            </div>
+                                <span
+                                  className={
+                                    progress >= 25
+                                      ? 'text-green-600 font-semibold'
+                                      : ''
+                                  }
+                                >
+                                  Requested
+                                </span>
 
-                          </div>
+                                <span
+                                  className={`text-center ${
+                                    progress >= 50
+                                      ? 'text-green-600 font-semibold'
+                                      : ''
+                                  }`}
+                                >
+                                  Approved
+                                </span>
 
-                        )}
+                                <span
+                                  className={`text-center ${
+                                    progress >= 75
+                                      ? 'text-green-600 font-semibold'
+                                      : ''
+                                  }`}
+                                >
+                                  Picked Up
+                                </span>
 
+                                <span
+                                  className={`text-right ${
+                                    progress >= 100
+                                      ? 'text-green-600 font-semibold'
+                                      : ''
+                                  }`}
+                                >
+                                  Delivered
+                                </span>
 
-                        {/* Delivered */}
-
-                        {request.status === 'delivered' && (
-
-                          <div className="mt-5 pt-4 border-t border-slate-100">
-
-                            <div className="flex items-center gap-2 text-purple-700 text-sm font-semibold">
-
-                              <div className="w-7 h-7 rounded-lg bg-purple-50 flex items-center justify-center">
-                                <CheckCircle size={16} />
                               </div>
 
-                              Food successfully delivered 🎉
+                            </div>
+
+                          )}
+
+                          {/* PENDING ACTIONS */}
+
+                          {request.status === 'pending' && (
+
+                            <div className="flex flex-col sm:flex-row gap-3 mt-5 pt-5 border-t border-slate-100">
+
+                              <button
+                                onClick={() =>
+                                  updateRequestStatus(
+                                    request._id,
+                                    'approved'
+                                  )
+                                }
+                                disabled={isUpdating}
+                                className="flex-1 inline-flex items-center justify-center gap-2 bg-green-600 text-white py-3 px-4 rounded-xl font-bold text-sm hover:bg-green-700 hover:shadow-md transition disabled:opacity-60 disabled:cursor-not-allowed"
+                              >
+                                {isUpdating ? (
+                                  <>
+                                    <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                                    Updating...
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle size={18} />
+                                    Approve Request
+                                  </>
+                                )}
+                              </button>
+
+                              <button
+                                onClick={() =>
+                                  updateRequestStatus(
+                                    request._id,
+                                    'rejected'
+                                  )
+                                }
+                                disabled={isUpdating}
+                                className="flex-1 inline-flex items-center justify-center gap-2 bg-white text-red-600 border border-red-200 py-3 px-4 rounded-xl font-bold text-sm hover:bg-red-50 hover:border-red-300 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                              >
+                                <XCircle size={18} />
+                                Reject Request
+                              </button>
 
                             </div>
 
-                          </div>
+                          )}
 
-                        )}
+                          {/* APPROVED */}
 
-                      </article>
+                          {request.status === 'approved' && (
 
-                    ))}
+                            <div className="mt-5 pt-4 border-t border-slate-100">
+
+                              <div className="flex items-center gap-3">
+
+                                <div className="w-9 h-9 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
+                                  <CheckCircle size={18} />
+                                </div>
+
+                                <div>
+                                  <p className="text-sm font-bold text-green-700">
+                                    Request approved
+                                  </p>
+
+                                  <p className="text-xs text-slate-500 mt-0.5">
+                                    Waiting for volunteer pickup.
+                                  </p>
+                                </div>
+
+                              </div>
+
+                            </div>
+
+                          )}
+
+                          {/* PICKED UP */}
+
+                          {(request.status === 'picked_up' ||
+                            request.status === 'pickedup') && (
+
+                            <div className="mt-5 pt-4 border-t border-slate-100">
+
+                              <div className="flex items-center gap-3">
+
+                                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                                  <Truck size={18} />
+                                </div>
+
+                                <div>
+                                  <p className="text-sm font-bold text-blue-700">
+                                    Food picked up
+                                  </p>
+
+                                  <p className="text-xs text-slate-500 mt-0.5">
+                                    The donation is on its way.
+                                  </p>
+                                </div>
+
+                              </div>
+
+                            </div>
+
+                          )}
+
+                          {/* DELIVERED */}
+
+                          {request.status === 'delivered' && (
+
+                            <div className="mt-5 pt-4 border-t border-slate-100">
+
+                              <div className="flex items-center gap-3">
+
+                                <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                                  <CheckCircle size={18} />
+                                </div>
+
+                                <div>
+                                  <p className="text-sm font-bold text-purple-700">
+                                    Donation delivered 🎉
+                                  </p>
+
+                                  <p className="text-xs text-slate-500 mt-0.5">
+                                    Your food successfully reached
+                                    the receiver.
+                                  </p>
+                                </div>
+
+                              </div>
+
+                            </div>
+
+                          )}
+
+                          {/* REJECTED */}
+
+                          {request.status === 'rejected' && (
+
+                            <div className="mt-5 pt-4 border-t border-slate-100">
+
+                              <div className="flex items-center gap-3">
+
+                                <div className="w-9 h-9 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
+                                  <XCircle size={18} />
+                                </div>
+
+                                <div>
+                                  <p className="text-sm font-bold text-red-700">
+                                    Request rejected
+                                  </p>
+
+                                  <p className="text-xs text-slate-500 mt-0.5">
+                                    This request was not approved.
+                                  </p>
+                                </div>
+
+                              </div>
+
+                            </div>
+
+                          )}
+
+                        </article>
+                      );
+                    })}
 
                   </div>
 
@@ -696,53 +897,37 @@ const DonorDashboard = () => {
 
           </section>
 
-
           {/* ===================================================
               SIDEBAR
           =================================================== */}
 
-          <aside>
+          <aside className="space-y-6">
 
-            {/* Quick Actions */}
+            {/* QUICK ACTIONS */}
 
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
 
-              <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-900">
+                Quick Actions
+              </h2>
 
-                <div>
-
-                  <h2 className="text-lg font-bold text-slate-800">
-                    Quick Actions
-                  </h2>
-
-                  <p className="text-sm text-slate-500 mt-1">
-                    Manage your donations
-                  </p>
-
-                </div>
-
-                <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center">
-                  <ArrowRight size={18} />
-                </div>
-
-              </div>
-
-
-              {/* Donate */}
+              <p className="text-sm text-slate-500 mt-1">
+                Manage your food donations
+              </p>
 
               <Link
                 to="/add-food"
-                className="group flex items-center justify-between gap-3 p-4 mt-5 rounded-xl bg-green-50 border border-green-100 hover:bg-green-100 hover:border-green-200 transition-all"
+                className="group flex items-center justify-between gap-3 p-4 mt-5 rounded-xl bg-green-50 border border-green-100 hover:bg-green-100 transition"
               >
 
                 <div className="flex items-center gap-3">
 
-                  <div className="w-10 h-10 rounded-xl bg-green-600 text-white flex items-center justify-center shadow-sm">
+                  <div className="w-10 h-10 rounded-xl bg-green-600 text-white flex items-center justify-center">
                     <Plus size={19} />
                   </div>
 
                   <div>
-                    <p className="font-bold text-slate-800 text-sm">
+                    <p className="font-bold text-sm text-slate-800">
                       Donate Food
                     </p>
 
@@ -755,32 +940,29 @@ const DonorDashboard = () => {
 
                 <ArrowRight
                   size={18}
-                  className="text-green-500 group-hover:translate-x-1 transition-transform"
+                  className="text-green-500 group-hover:translate-x-1 transition"
                 />
 
               </Link>
 
-
-              {/* Food listings */}
-
               <Link
                 to="/food"
-                className="group flex items-center justify-between gap-3 p-4 mt-3 rounded-xl bg-blue-50 border border-blue-100 hover:bg-blue-100 hover:border-blue-200 transition-all"
+                className="group flex items-center justify-between gap-3 p-4 mt-3 rounded-xl bg-blue-50 border border-blue-100 hover:bg-blue-100 transition"
               >
 
                 <div className="flex items-center gap-3">
 
-                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm">
+                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center">
                     <Package size={19} />
                   </div>
 
                   <div>
-                    <p className="font-bold text-slate-800 text-sm">
+                    <p className="font-bold text-sm text-slate-800">
                       Food Listings
                     </p>
 
                     <p className="text-xs text-slate-500 mt-0.5">
-                      View available food
+                      View available donations
                     </p>
                   </div>
 
@@ -788,21 +970,16 @@ const DonorDashboard = () => {
 
                 <ArrowRight
                   size={18}
-                  className="text-blue-500 group-hover:translate-x-1 transition-transform"
+                  className="text-blue-500 group-hover:translate-x-1 transition"
                 />
 
               </Link>
 
             </div>
 
+            {/* IMPACT */}
 
-            {/* =================================================
-                IMPACT
-            ================================================= */}
-
-            <div className="relative overflow-hidden mt-6 bg-gradient-to-br from-green-700 via-green-600 to-emerald-500 rounded-2xl p-6 text-white shadow-lg">
-
-              {/* Decorative */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-green-700 via-green-600 to-emerald-500 rounded-2xl p-6 text-white shadow-lg">
 
               <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-xl" />
 
@@ -815,35 +992,24 @@ const DonorDashboard = () => {
                   </div>
 
                   <div>
-
                     <h3 className="text-lg font-bold">
                       Your Impact
                     </h3>
 
-                    <p className="text-green-100 text-xs mt-0.5">
+                    <p className="text-green-100 text-xs">
                       Every donation counts.
                     </p>
-
                   </div>
 
                 </div>
 
-
-                {/* Stats */}
-
                 <div className="grid grid-cols-2 gap-3 mt-6">
 
-                  <div className="bg-white/10 border border-white/10 rounded-xl p-4 backdrop-blur-sm">
+                  <div className="bg-white/10 border border-white/10 rounded-xl p-4">
 
-                    <div className="flex items-center justify-between">
-
-                      <p className="text-green-100 text-xs">
-                        Donations
-                      </p>
-
-                      <Package size={15} className="text-green-100" />
-
-                    </div>
+                    <p className="text-green-100 text-xs">
+                      Donations
+                    </p>
 
                     <p className="text-2xl font-bold mt-2">
                       {totalDonations}
@@ -851,18 +1017,11 @@ const DonorDashboard = () => {
 
                   </div>
 
+                  <div className="bg-white/10 border border-white/10 rounded-xl p-4">
 
-                  <div className="bg-white/10 border border-white/10 rounded-xl p-4 backdrop-blur-sm">
-
-                    <div className="flex items-center justify-between">
-
-                      <p className="text-green-100 text-xs">
-                        People Served
-                      </p>
-
-                      <Users size={15} className="text-green-100" />
-
-                    </div>
+                    <p className="text-green-100 text-xs">
+                      People Served
+                    </p>
 
                     <p className="text-2xl font-bold mt-2">
                       {deliveredPeople}
@@ -870,18 +1029,11 @@ const DonorDashboard = () => {
 
                   </div>
 
+                  <div className="bg-white/10 border border-white/10 rounded-xl p-4">
 
-                  <div className="bg-white/10 border border-white/10 rounded-xl p-4 backdrop-blur-sm">
-
-                    <div className="flex items-center justify-between">
-
-                      <p className="text-green-100 text-xs">
-                        Delivered
-                      </p>
-
-                      <CheckCircle size={15} className="text-green-100" />
-
-                    </div>
+                    <p className="text-green-100 text-xs">
+                      Delivered
+                    </p>
 
                     <p className="text-2xl font-bold mt-2">
                       {deliveredRequests}
@@ -889,18 +1041,11 @@ const DonorDashboard = () => {
 
                   </div>
 
+                  <div className="bg-white/10 border border-white/10 rounded-xl p-4">
 
-                  <div className="bg-white/10 border border-white/10 rounded-xl p-4 backdrop-blur-sm">
-
-                    <div className="flex items-center justify-between">
-
-                      <p className="text-green-100 text-xs">
-                        Active
-                      </p>
-
-                      <Truck size={15} className="text-green-100" />
-
-                    </div>
+                    <p className="text-green-100 text-xs">
+                      Active
+                    </p>
 
                     <p className="text-2xl font-bold mt-2">
                       {activeDonations}
@@ -910,9 +1055,6 @@ const DonorDashboard = () => {
 
                 </div>
 
-
-                {/* Rejected */}
-
                 <div className="mt-5 pt-4 border-t border-white/20 flex items-center justify-between">
 
                   <span className="text-green-100 text-sm">
@@ -920,13 +1062,35 @@ const DonorDashboard = () => {
                   </span>
 
                   <span className="inline-flex items-center gap-1.5 font-bold text-sm">
-
                     <XCircle size={15} />
-
                     {rejectedRequests}
-
                   </span>
 
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* MOTIVATION */}
+
+            <div className="bg-white rounded-2xl border border-slate-200 p-5">
+
+              <div className="flex gap-3">
+
+                <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-xl shrink-0">
+                  💚
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-slate-800">
+                    Keep sharing
+                  </h3>
+
+                  <p className="text-sm text-slate-500 mt-1 leading-relaxed">
+                    A small donation can become a meaningful
+                    meal for someone in need.
+                  </p>
                 </div>
 
               </div>
