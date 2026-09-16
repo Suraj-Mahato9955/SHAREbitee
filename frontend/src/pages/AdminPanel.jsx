@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
-import api from '../services/api';
-import { AuthContext } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+
+import api from '../services/api';
+import { AuthContext } from '../context/AuthContext';
 
 import {
   ShieldCheck,
@@ -19,6 +20,12 @@ import {
   Activity,
   Shield,
   X,
+  Utensils,
+  CheckCircle,
+  Clock,
+  XCircle,
+  PackageCheck,
+  Database,
 } from 'lucide-react';
 
 const AdminPanel = () => {
@@ -58,14 +65,13 @@ const AdminPanel = () => {
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-    fetchStats();
-  }, []);
-
+  // =========================
+  // FETCH STATS
+  // =========================
   const fetchStats = async () => {
     try {
       const { data } = await api.get('/admin/stats');
+
       setStats(data);
     } catch (error) {
       console.error('ADMIN STATS ERROR:', error);
@@ -77,15 +83,34 @@ const AdminPanel = () => {
     }
   };
 
+  useEffect(() => {
+    fetchUsers();
+    fetchStats();
+  }, []);
+
+  // =========================
+  // REFRESH EVERYTHING
+  // =========================
+  const handleRefresh = async () => {
+    setRefreshing(true);
+
+    await Promise.all([
+      fetchUsers(true),
+      fetchStats()
+    ]);
+
+    setRefreshing(false);
+  };
+
   // =========================
   // DELETE USER
   // =========================
   const handleDeleteUser = async (id) => {
-    if (
-      !window.confirm(
-        'Are you sure you want to delete this user? All their foods and requests will also be deleted.'
-      )
-    ) {
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this user? All their foods and requests will also be deleted.'
+    );
+
+    if (!confirmed) {
       return;
     }
 
@@ -94,7 +119,11 @@ const AdminPanel = () => {
 
       toast.success('User deleted successfully');
 
-      fetchUsers();
+      await Promise.all([
+        fetchUsers(),
+        fetchStats()
+      ]);
+
     } catch (error) {
       console.error('DELETE USER ERROR:', error);
 
@@ -116,38 +145,27 @@ const AdminPanel = () => {
   // STATISTICS
   // =========================
   const totalUsers = stats?.users?.total || 0;
-
   const totalDonors = stats?.users?.donors || 0;
-
   const totalNGOs = stats?.users?.ngos || 0;
-
   const totalVolunteers = stats?.users?.volunteers || 0;
-
   const totalAdmins = stats?.users?.admins || 0;
 
   const totalFood = stats?.food?.total || 0;
-
   const availableFood = stats?.food?.available || 0;
-
   const deliveredFood = stats?.food?.delivered || 0;
 
   const totalRequests = stats?.requests?.total || 0;
-
   const pendingRequests = stats?.requests?.pending || 0;
-
   const approvedRequests = stats?.requests?.approved || 0;
-
   const pickedUpRequests = stats?.requests?.pickedUp || 0;
-
   const deliveredRequests = stats?.requests?.delivered || 0;
-
   const rejectedRequests = stats?.requests?.rejected || 0;
 
   // =========================
   // FILTER USERS
   // =========================
   const filteredUsers = users.filter((u) => {
-    const search = searchTerm.toLowerCase();
+    const search = searchTerm.toLowerCase().trim();
 
     const matchesSearch =
       u.name?.toLowerCase().includes(search) ||
@@ -166,19 +184,19 @@ const AdminPanel = () => {
   const getRoleStyle = (role) => {
     switch (role) {
       case 'admin':
-        return 'bg-purple-100 text-purple-700 border-purple-200';
+        return 'bg-purple-50 text-purple-700 border-purple-200';
 
       case 'donor':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
+        return 'bg-blue-50 text-blue-700 border-blue-200';
 
       case 'ngo':
-        return 'bg-green-100 text-green-700 border-green-200';
+        return 'bg-green-50 text-green-700 border-green-200';
 
       case 'volunteer':
-        return 'bg-orange-100 text-orange-700 border-orange-200';
+        return 'bg-orange-50 text-orange-700 border-orange-200';
 
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return 'bg-slate-50 text-slate-700 border-slate-200';
     }
   };
 
@@ -209,522 +227,728 @@ const AdminPanel = () => {
   // =========================
   if (loading) {
     return (
-      <div className="min-h-[75vh] bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-14 h-14 border-4 border-gray-200 border-t-purple-600 rounded-full animate-spin mx-auto"></div>
+      <div className="min-h-screen bg-slate-50 px-4 py-10">
+        <div className="max-w-7xl mx-auto">
 
-          <p className="mt-5 text-gray-600 font-medium">
-            Loading admin dashboard...
-          </p>
+          <div className="h-52 rounded-3xl bg-slate-200 animate-pulse mb-8"></div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+            {[1, 2, 3, 4, 5].map((item) => (
+              <div
+                key={item}
+                className="h-36 bg-white rounded-2xl border border-slate-100 animate-pulse"
+              />
+            ))}
+          </div>
+
+          <div className="h-96 bg-white rounded-3xl border border-slate-100 animate-pulse"></div>
+
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
+    <div className="min-h-screen bg-slate-50 pb-14">
 
-      {/* ================= HERO ================= */}
-      <section className="bg-gradient-to-r from-purple-800 via-purple-700 to-indigo-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      {/* =====================================================
+          HERO
+      ===================================================== */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-purple-800 via-purple-700 to-indigo-700 text-white">
 
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div className="absolute -top-32 -right-24 w-80 h-80 rounded-full bg-white/10"></div>
+        <div className="absolute -bottom-40 left-1/3 w-96 h-96 rounded-full bg-white/5"></div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-9 sm:py-11">
+
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-7">
 
             <div>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="bg-white/20 p-2.5 rounded-xl">
-                  <ShieldCheck size={24} />
-                </div>
 
-                <span className="text-purple-100 font-medium">
-                  System Administration
-                </span>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-sm font-medium text-purple-100 mb-4">
+                <ShieldCheck size={16} />
+                System Administration
               </div>
 
-              <h1 className="text-3xl md:text-4xl font-bold">
-                Admin Dashboard 🛡️
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
+                Admin Dashboard
               </h1>
 
-              <p className="text-purple-100 mt-3 max-w-2xl">
-                Monitor users and manage the SHAREbite
-                platform from one place.
+              <p className="mt-3 max-w-2xl text-purple-100 text-sm sm:text-base leading-relaxed">
+                Monitor users, donations and requests while
+                managing the SHAREbite platform from one place.
               </p>
+
+              <div className="flex flex-wrap gap-3 mt-6">
+
+                <div className="flex items-center gap-2 bg-white/10 border border-white/10 rounded-xl px-4 py-2.5 text-sm">
+                  <span className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                  System Operational
+                </div>
+
+                <div className="flex items-center gap-2 bg-white/10 border border-white/10 rounded-xl px-4 py-2.5 text-sm">
+                  <Users size={15} />
+                  {totalUsers} Users
+                </div>
+
+              </div>
+
             </div>
 
             <button
-              onClick={async () => {
-                setRefreshing(true);
-
-                await Promise.all([
-                  fetchUsers(true),
-                  fetchStats()
-                ]);
-
-                setRefreshing(false);
-              }}
+              onClick={handleRefresh}
               disabled={refreshing}
-              className="flex items-center justify-center gap-2 bg-white text-purple-700 px-5 py-3 rounded-xl font-semibold shadow-lg hover:bg-purple-50 transition disabled:opacity-70"
+              className="inline-flex items-center justify-center gap-2 bg-white text-purple-700 px-5 py-3.5 rounded-xl font-bold shadow-xl hover:bg-purple-50 hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:hover:translate-y-0"
             >
               <RefreshCw
                 size={18}
-                className={
-                  refreshing ? 'animate-spin' : ''
-                }
+                className={refreshing ? 'animate-spin' : ''}
               />
 
               {refreshing ? 'Refreshing...' : 'Refresh Data'}
             </button>
 
           </div>
+
         </div>
       </section>
 
-      {/* ================= MAIN ================= */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
+      {/* =====================================================
+          MAIN
+      ===================================================== */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-5">
 
-        {/* ================= STATS ================= */}
+        {/* ===================================================
+            USER STATS
+        =================================================== */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
 
-          {/* Total Users */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <div className="flex justify-between items-center">
-              <div className="bg-purple-100 text-purple-600 p-3 rounded-xl">
-                <Users size={22} />
+          {/* TOTAL USERS */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:-translate-y-1 hover:shadow-md transition-all">
+
+            <div className="flex items-center justify-between">
+
+              <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                <Users size={21} />
               </div>
 
-              <span className="text-xs font-semibold text-gray-400">
+              <span className="text-[11px] font-bold tracking-wider text-slate-400">
                 TOTAL
               </span>
+
             </div>
 
-            <p className="text-3xl font-bold text-gray-800 mt-4">
+            <p className="text-3xl font-bold text-slate-900 mt-4">
               {totalUsers}
             </p>
 
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-slate-500 mt-1">
               Registered Users
             </p>
+
           </div>
 
-          {/* Donors */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <div className="flex justify-between items-center">
-              <div className="bg-blue-100 text-blue-600 p-3 rounded-xl">
-                <Heart size={22} />
+          {/* DONORS */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:-translate-y-1 hover:shadow-md transition-all">
+
+            <div className="flex items-center justify-between">
+
+              <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <Heart size={21} />
               </div>
 
-              <span className="text-xs font-semibold text-gray-400">
+              <span className="text-[11px] font-bold tracking-wider text-slate-400">
                 DONORS
               </span>
+
             </div>
 
-            <p className="text-3xl font-bold text-gray-800 mt-4">
+            <p className="text-3xl font-bold text-slate-900 mt-4">
               {totalDonors}
             </p>
 
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-slate-500 mt-1">
               Food Contributors
             </p>
+
           </div>
 
-          {/* NGOs */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <div className="flex justify-between items-center">
-              <div className="bg-green-100 text-green-600 p-3 rounded-xl">
-                <Building2 size={22} />
+          {/* NGOS */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:-translate-y-1 hover:shadow-md transition-all">
+
+            <div className="flex items-center justify-between">
+
+              <div className="w-11 h-11 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
+                <Building2 size={21} />
               </div>
 
-              <span className="text-xs font-semibold text-gray-400">
+              <span className="text-[11px] font-bold tracking-wider text-slate-400">
                 NGOS
               </span>
+
             </div>
 
-            <p className="text-3xl font-bold text-gray-800 mt-4">
+            <p className="text-3xl font-bold text-slate-900 mt-4">
               {totalNGOs}
             </p>
 
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-slate-500 mt-1">
               Food Receivers
             </p>
+
           </div>
 
-          {/* Volunteers */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <div className="flex justify-between items-center">
-              <div className="bg-orange-100 text-orange-600 p-3 rounded-xl">
-                <Truck size={22} />
+          {/* VOLUNTEERS */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:-translate-y-1 hover:shadow-md transition-all">
+
+            <div className="flex items-center justify-between">
+
+              <div className="w-11 h-11 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
+                <Truck size={21} />
               </div>
 
-              <span className="text-xs font-semibold text-gray-400">
+              <span className="text-[11px] font-bold tracking-wider text-slate-400">
                 VOLUNTEERS
               </span>
+
             </div>
 
-            <p className="text-3xl font-bold text-gray-800 mt-4">
+            <p className="text-3xl font-bold text-slate-900 mt-4">
               {totalVolunteers}
             </p>
 
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-slate-500 mt-1">
               Delivery Partners
             </p>
+
           </div>
 
-          {/* Admins */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <div className="flex justify-between items-center">
-              <div className="bg-indigo-100 text-indigo-600 p-3 rounded-xl">
-                <Shield size={22} />
+          {/* ADMINS */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:-translate-y-1 hover:shadow-md transition-all">
+
+            <div className="flex items-center justify-between">
+
+              <div className="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <Shield size={21} />
               </div>
 
-              <span className="text-xs font-semibold text-gray-400">
+              <span className="text-[11px] font-bold tracking-wider text-slate-400">
                 ADMINS
               </span>
+
             </div>
 
-            <p className="text-3xl font-bold text-gray-800 mt-4">
+            <p className="text-3xl font-bold text-slate-900 mt-4">
               {totalAdmins}
             </p>
 
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-slate-500 mt-1">
               System Managers
             </p>
+
           </div>
 
         </div>
-        {/* ================= FOOD & REQUEST STATS ================= */}
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {/* ===================================================
+            FOOD + REQUEST OVERVIEW
+        =================================================== */}
+        <div className="grid lg:grid-cols-3 gap-5 mb-8">
 
-          {/* Total Food */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <div className="flex justify-between items-center">
-              <div className="bg-orange-100 text-orange-600 p-3 rounded-xl">
-                <Heart size={22} />
+          {/* FOOD OVERVIEW */}
+          <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+
+            <div className="flex items-center justify-between gap-4 mb-6">
+
+              <div className="flex items-center gap-3">
+
+                <div className="w-11 h-11 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
+                  <Utensils size={21} />
+                </div>
+
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">
+                    Food & Donation Overview
+                  </h2>
+
+                  <p className="text-sm text-slate-500">
+                    Current food activity across the platform
+                  </p>
+                </div>
+
               </div>
 
-              <span className="text-xs font-semibold text-gray-400">
-                FOOD
-              </span>
+              <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-400">
+                <Database size={14} />
+                Live Data
+              </div>
+
             </div>
 
-            <p className="text-3xl font-bold text-gray-800 mt-4">
-              {totalFood}
-            </p>
+            <div className="grid sm:grid-cols-3 gap-4">
 
-            <p className="text-sm text-gray-500 mt-1">
-              Total Donations
-            </p>
+              <div className="rounded-2xl bg-slate-50 border border-slate-100 p-5">
+                <div className="flex items-center gap-2 text-slate-500 text-sm font-medium">
+                  <PackageCheck size={17} />
+                  Total Donations
+                </div>
+
+                <p className="text-3xl font-bold text-slate-900 mt-3">
+                  {totalFood}
+                </p>
+
+                <p className="text-xs text-slate-400 mt-1">
+                  Food listings created
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-5">
+                <div className="flex items-center gap-2 text-emerald-700 text-sm font-medium">
+                  <Activity size={17} />
+                  Available Food
+                </div>
+
+                <p className="text-3xl font-bold text-emerald-800 mt-3">
+                  {availableFood}
+                </p>
+
+                <p className="text-xs text-emerald-600 mt-1">
+                  Currently available
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-purple-50 border border-purple-100 p-5">
+                <div className="flex items-center gap-2 text-purple-700 text-sm font-medium">
+                  <CheckCircle size={17} />
+                  Delivered Food
+                </div>
+
+                <p className="text-3xl font-bold text-purple-800 mt-3">
+                  {deliveredFood}
+                </p>
+
+                <p className="text-xs text-purple-600 mt-1">
+                  Successfully delivered
+                </p>
+              </div>
+
+            </div>
+
           </div>
 
+          {/* REQUEST SUMMARY */}
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
 
-          {/* Available Food */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <div className="flex justify-between items-center">
-              <div className="bg-green-100 text-green-600 p-3 rounded-xl">
-                <Activity size={22} />
+            <div className="flex items-center gap-3 mb-6">
+
+              <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <Activity size={21} />
               </div>
 
-              <span className="text-xs font-semibold text-gray-400">
-                AVAILABLE
-              </span>
-            </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">
+                  Request Summary
+                </h2>
 
-            <p className="text-3xl font-bold text-gray-800 mt-4">
-              {availableFood}
-            </p>
-
-            <p className="text-sm text-gray-500 mt-1">
-              Food Available
-            </p>
-          </div>
-
-
-          {/* Total Requests */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <div className="flex justify-between items-center">
-              <div className="bg-blue-100 text-blue-600 p-3 rounded-xl">
-                <Users size={22} />
+                <p className="text-sm text-slate-500">
+                  Delivery workflow
+                </p>
               </div>
 
-              <span className="text-xs font-semibold text-gray-400">
-                REQUESTS
-              </span>
             </div>
 
-            <p className="text-3xl font-bold text-gray-800 mt-4">
-              {totalRequests}
-            </p>
+            <div className="space-y-3">
 
-            <p className="text-sm text-gray-500 mt-1">
-              Total Requests
-            </p>
-          </div>
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50">
+                <div className="flex items-center gap-2.5">
+                  <Users size={16} className="text-slate-500" />
+                  <span className="text-sm font-semibold text-slate-700">
+                    Total Requests
+                  </span>
+                </div>
 
-
-          {/* Delivered */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <div className="flex justify-between items-center">
-              <div className="bg-purple-100 text-purple-600 p-3 rounded-xl">
-                <Truck size={22} />
+                <span className="font-bold text-slate-900">
+                  {totalRequests}
+                </span>
               </div>
 
-              <span className="text-xs font-semibold text-gray-400">
-                SUCCESS
-              </span>
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-yellow-50">
+                <div className="flex items-center gap-2.5">
+                  <Clock size={16} className="text-yellow-600" />
+                  <span className="text-sm font-semibold text-yellow-800">
+                    Pending
+                  </span>
+                </div>
+
+                <span className="font-bold text-yellow-900">
+                  {pendingRequests}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-blue-50">
+                <div className="flex items-center gap-2.5">
+                  <CheckCircle size={16} className="text-blue-600" />
+                  <span className="text-sm font-semibold text-blue-800">
+                    Approved
+                  </span>
+                </div>
+
+                <span className="font-bold text-blue-900">
+                  {approvedRequests}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-orange-50">
+                <div className="flex items-center gap-2.5">
+                  <Truck size={16} className="text-orange-600" />
+                  <span className="text-sm font-semibold text-orange-800">
+                    Picked Up
+                  </span>
+                </div>
+
+                <span className="font-bold text-orange-900">
+                  {pickedUpRequests}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-green-50">
+                <div className="flex items-center gap-2.5">
+                  <PackageCheck size={16} className="text-green-600" />
+                  <span className="text-sm font-semibold text-green-800">
+                    Delivered
+                  </span>
+                </div>
+
+                <span className="font-bold text-green-900">
+                  {deliveredRequests}
+                </span>
+              </div>
+
             </div>
 
-            <p className="text-3xl font-bold text-gray-800 mt-4">
-              {deliveredRequests}
-            </p>
-
-            <p className="text-sm text-gray-500 mt-1">
-              Delivered Requests
-            </p>
           </div>
 
         </div>
-        <div className="grid md:grid-cols-5 gap-4 mb-8">
 
-          <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-4">
-            <p className="text-sm text-yellow-700 font-semibold">
+        {/* ===================================================
+            REQUEST STATUS
+        =================================================== */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
+
+          <div className="bg-white border border-yellow-100 rounded-2xl p-4 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-wide text-yellow-600">
               Pending
             </p>
-            <p className="text-2xl font-bold text-yellow-800 mt-1">
+            <p className="text-2xl font-bold text-slate-900 mt-2">
               {pendingRequests}
             </p>
           </div>
 
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-            <p className="text-sm text-blue-700 font-semibold">
+          <div className="bg-white border border-blue-100 rounded-2xl p-4 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-wide text-blue-600">
               Approved
             </p>
-            <p className="text-2xl font-bold text-blue-800 mt-1">
+            <p className="text-2xl font-bold text-slate-900 mt-2">
               {approvedRequests}
             </p>
           </div>
 
-          <div className="bg-orange-50 border border-orange-100 rounded-xl p-4">
-            <p className="text-sm text-orange-700 font-semibold">
+          <div className="bg-white border border-orange-100 rounded-2xl p-4 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-wide text-orange-600">
               Picked Up
             </p>
-            <p className="text-2xl font-bold text-orange-800 mt-1">
+            <p className="text-2xl font-bold text-slate-900 mt-2">
               {pickedUpRequests}
             </p>
           </div>
 
-          <div className="bg-green-50 border border-green-100 rounded-xl p-4">
-            <p className="text-sm text-green-700 font-semibold">
+          <div className="bg-white border border-green-100 rounded-2xl p-4 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-wide text-green-600">
               Delivered
             </p>
-            <p className="text-2xl font-bold text-green-800 mt-1">
+            <p className="text-2xl font-bold text-slate-900 mt-2">
               {deliveredRequests}
             </p>
           </div>
 
-          <div className="bg-red-50 border border-red-100 rounded-xl p-4">
-            <p className="text-sm text-red-700 font-semibold">
+          <div className="bg-white border border-red-100 rounded-2xl p-4 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-wide text-red-600">
               Rejected
             </p>
-            <p className="text-2xl font-bold text-red-800 mt-1">
+            <p className="text-2xl font-bold text-slate-900 mt-2">
               {rejectedRequests}
             </p>
           </div>
 
         </div>
 
-        {/* ================= OVERVIEW ================= */}
+        {/* ===================================================
+            PLATFORM OVERVIEW
+        =================================================== */}
         <div className="grid lg:grid-cols-3 gap-6 mb-8">
 
-          {/* Platform Overview */}
-          <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          {/* USER DISTRIBUTION */}
+          <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
 
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-purple-100 text-purple-600 p-3 rounded-xl">
-                <Activity size={22} />
+            <div className="flex items-center gap-3 mb-7">
+
+              <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                <Users size={21} />
               </div>
 
               <div>
-                <h2 className="text-xl font-bold text-gray-800">
+                <h2 className="text-lg font-bold text-slate-900">
                   Platform Overview
                 </h2>
 
-                <p className="text-sm text-gray-500">
-                  Current user distribution
+                <p className="text-sm text-slate-500">
+                  User distribution across SHAREbite
                 </p>
               </div>
+
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-6">
 
-              {/* Donor */}
+              {/* DONORS */}
               <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-semibold text-gray-700">
-                    Donors
-                  </span>
 
-                  <span className="text-sm text-gray-500">
+                <div className="flex items-center justify-between mb-2">
+
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                    <span className="text-sm font-semibold text-slate-700">
+                      Donors
+                    </span>
+                  </div>
+
+                  <span className="text-sm font-bold text-slate-600">
                     {totalDonors}
                   </span>
+
                 </div>
 
-                <div className="w-full bg-gray-100 rounded-full h-2.5">
+                <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+
                   <div
-                    className="bg-blue-500 h-2.5 rounded-full transition-all"
+                    className="h-full bg-blue-500 rounded-full transition-all duration-700"
                     style={{
-                      width: `${totalUsers
+                      width: `${
+                        totalUsers
                           ? (totalDonors / totalUsers) * 100
                           : 0
-                        }%`,
+                      }%`
                     }}
-                  ></div>
+                  />
+
                 </div>
+
               </div>
 
               {/* NGO */}
               <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-semibold text-gray-700">
-                    NGOs
-                  </span>
 
-                  <span className="text-sm text-gray-500">
+                <div className="flex items-center justify-between mb-2">
+
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                    <span className="text-sm font-semibold text-slate-700">
+                      NGOs
+                    </span>
+                  </div>
+
+                  <span className="text-sm font-bold text-slate-600">
                     {totalNGOs}
                   </span>
+
                 </div>
 
-                <div className="w-full bg-gray-100 rounded-full h-2.5">
+                <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+
                   <div
-                    className="bg-green-500 h-2.5 rounded-full transition-all"
+                    className="h-full bg-green-500 rounded-full transition-all duration-700"
                     style={{
-                      width: `${totalUsers
+                      width: `${
+                        totalUsers
                           ? (totalNGOs / totalUsers) * 100
                           : 0
-                        }%`,
+                      }%`
                     }}
-                  ></div>
+                  />
+
                 </div>
+
               </div>
 
-              {/* Volunteers */}
+              {/* VOLUNTEERS */}
               <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-semibold text-gray-700">
-                    Volunteers
-                  </span>
 
-                  <span className="text-sm text-gray-500">
+                <div className="flex items-center justify-between mb-2">
+
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
+                    <span className="text-sm font-semibold text-slate-700">
+                      Volunteers
+                    </span>
+                  </div>
+
+                  <span className="text-sm font-bold text-slate-600">
                     {totalVolunteers}
                   </span>
+
                 </div>
 
-                <div className="w-full bg-gray-100 rounded-full h-2.5">
+                <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+
                   <div
-                    className="bg-orange-500 h-2.5 rounded-full transition-all"
+                    className="h-full bg-orange-500 rounded-full transition-all duration-700"
                     style={{
-                      width: `${totalUsers
-                          ? (totalVolunteers / totalUsers) *
-                          100
+                      width: `${
+                        totalUsers
+                          ? (totalVolunteers / totalUsers) * 100
                           : 0
-                        }%`,
+                      }%`
                     }}
-                  ></div>
+                  />
+
                 </div>
+
               </div>
 
-              {/* Admins */}
+              {/* ADMINS */}
               <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-semibold text-gray-700">
-                    Admins
-                  </span>
 
-                  <span className="text-sm text-gray-500">
+                <div className="flex items-center justify-between mb-2">
+
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                    <span className="text-sm font-semibold text-slate-700">
+                      Admins
+                    </span>
+                  </div>
+
+                  <span className="text-sm font-bold text-slate-600">
                     {totalAdmins}
                   </span>
+
                 </div>
 
-                <div className="w-full bg-gray-100 rounded-full h-2.5">
+                <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+
                   <div
-                    className="bg-purple-500 h-2.5 rounded-full transition-all"
+                    className="h-full bg-purple-500 rounded-full transition-all duration-700"
                     style={{
-                      width: `${totalUsers
+                      width: `${
+                        totalUsers
                           ? (totalAdmins / totalUsers) * 100
                           : 0
-                        }%`,
+                      }%`
                     }}
-                  ></div>
+                  />
+
                 </div>
+
               </div>
 
             </div>
+
           </div>
 
-          {/* Admin Status */}
-          <div className="bg-gradient-to-br from-purple-700 to-indigo-700 rounded-2xl p-6 text-white">
+          {/* SYSTEM STATUS */}
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-700 to-indigo-700 text-white p-6">
 
-            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mb-5">
-              <ShieldCheck size={30} />
-            </div>
+            <div className="absolute -top-20 -right-20 w-52 h-52 rounded-full bg-white/10"></div>
 
-            <h3 className="text-xl font-bold">
-              System Status
-            </h3>
+            <div className="relative">
 
-            <p className="text-purple-100 text-sm mt-2">
-              SHAREbite administration panel is active.
-            </p>
-
-            <div className="mt-7 bg-white/10 rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <span className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></span>
-
-                <span className="font-semibold">
-                  System Operational
-                </span>
+              <div className="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center mb-5">
+                <ShieldCheck size={29} />
               </div>
 
-              <p className="text-purple-200 text-xs mt-2">
-                User management services are available.
-              </p>
-            </div>
+              <h3 className="text-xl font-bold">
+                System Status
+              </h3>
 
-            <div className="mt-4 flex items-center gap-2 text-sm text-purple-100">
-              <Users size={16} />
-              {totalUsers} users registered
+              <p className="text-purple-100 text-sm mt-2 leading-relaxed">
+                SHAREbite administration services are
+                currently active.
+              </p>
+
+              <div className="mt-7 bg-white/10 border border-white/10 rounded-2xl p-4">
+
+                <div className="flex items-center gap-3">
+
+                  <span className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></span>
+
+                  <span className="font-bold">
+                    System Operational
+                  </span>
+
+                </div>
+
+                <p className="text-purple-200 text-xs mt-2">
+                  User management services are available.
+                </p>
+
+              </div>
+
+              <div className="mt-5 space-y-3 text-sm text-purple-100">
+
+                <div className="flex items-center gap-2">
+                  <Users size={16} />
+                  {totalUsers} registered users
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Utensils size={16} />
+                  {totalFood} food donations
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Truck size={16} />
+                  {deliveredRequests} completed deliveries
+                </div>
+
+              </div>
+
             </div>
 
           </div>
 
         </div>
 
-        {/* ================= USER MANAGEMENT ================= */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        {/* ===================================================
+            USER MANAGEMENT
+        =================================================== */}
+        <section className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
 
           {/* HEADER */}
-          <div className="p-6 border-b border-gray-100">
+          <div className="p-6 sm:p-7 border-b border-slate-100">
 
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
 
-              <div>
-                <div className="flex items-center gap-3">
-                  <div className="bg-purple-100 text-purple-600 p-3 rounded-xl">
-                    <Users size={22} />
-                  </div>
+              <div className="flex items-center gap-3">
 
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-800">
-                      Manage Users
-                    </h2>
-
-                    <p className="text-sm text-gray-500">
-                      View and manage registered users
-                    </p>
-                  </div>
+                <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                  <Users size={21} />
                 </div>
+
+                <div>
+
+                  <h2 className="text-xl font-bold text-slate-900">
+                    Manage Users
+                  </h2>
+
+                  <p className="text-sm text-slate-500 mt-0.5">
+                    View, search and manage registered accounts.
+                  </p>
+
+                </div>
+
               </div>
 
-              <div className="bg-purple-50 text-purple-700 px-4 py-2 rounded-xl font-semibold text-sm">
+              <div className="inline-flex items-center gap-2 bg-purple-50 border border-purple-100 text-purple-700 px-4 py-2.5 rounded-xl text-sm font-bold">
+                <Users size={15} />
                 {filteredUsers.length} of {totalUsers} users
               </div>
 
@@ -733,42 +957,41 @@ const AdminPanel = () => {
             {/* SEARCH + FILTER */}
             <div className="flex flex-col md:flex-row gap-3 mt-6">
 
-              {/* Search */}
               <div className="relative flex-1">
 
                 <Search
-                  size={19}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={18}
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
                 />
 
                 <input
                   type="text"
-                  placeholder="Search by name or email..."
                   value={searchTerm}
                   onChange={(e) =>
                     setSearchTerm(e.target.value)
                   }
-                  className="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Search by name or email..."
+                  className="w-full pl-11 pr-11 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:bg-white focus:border-purple-400 focus:ring-4 focus:ring-purple-500/10 transition"
                 />
 
                 {searchTerm && (
                   <button
+                    type="button"
                     onClick={() => setSearchTerm('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition"
                   >
-                    <X size={18} />
+                    <X size={16} />
                   </button>
                 )}
 
               </div>
 
-              {/* Role Filter */}
               <select
                 value={selectedRole}
                 onChange={(e) =>
                   setSelectedRole(e.target.value)
                 }
-                className="md:w-48 px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 bg-white text-gray-700"
+                className="md:w-52 px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:bg-white focus:border-purple-400 focus:ring-4 focus:ring-purple-500/10 transition cursor-pointer"
               >
                 <option value="all">All Roles</option>
                 <option value="admin">Admin</option>
@@ -780,53 +1003,76 @@ const AdminPanel = () => {
               </select>
 
             </div>
+
           </div>
 
-          {/* ================= TABLE ================= */}
+          {/* =================================================
+              NO USERS
+          ================================================= */}
           {filteredUsers.length === 0 ? (
 
-            <div className="py-16 text-center">
+            <div className="py-20 px-6 text-center">
 
-              <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
                 <Users size={30} />
               </div>
 
-              <h3 className="mt-4 font-bold text-gray-700">
+              <h3 className="mt-5 text-lg font-bold text-slate-800">
                 No users found
               </h3>
 
-              <p className="text-gray-500 text-sm mt-1">
-                Try changing your search or role filter.
+              <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">
+                Try changing your search term or selecting a
+                different role.
               </p>
+
+              {(searchTerm || selectedRole !== 'all') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchTerm('');
+                    setSelectedRole('all');
+                  }}
+                  className="mt-5 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-50 text-purple-700 font-semibold text-sm hover:bg-purple-100 transition"
+                >
+                  <X size={16} />
+                  Clear Filters
+                </button>
+              )}
 
             </div>
 
           ) : (
 
+            /* =================================================
+               USER TABLE
+            ================================================= */
             <div className="overflow-x-auto">
 
               <table className="w-full text-left">
 
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
 
-                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">
+                  <tr className="bg-slate-50 border-b border-slate-200">
+
+                    <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                       User
                     </th>
 
-                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">
+                    <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                       Role
                     </th>
 
-                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">
+                    <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                       Registered
                     </th>
 
-                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-right">
+                    <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">
                       Action
                     </th>
 
                   </tr>
+
                 </thead>
 
                 <tbody>
@@ -835,29 +1081,33 @@ const AdminPanel = () => {
 
                     <tr
                       key={u._id}
-                      className="border-b border-gray-100 hover:bg-gray-50 transition"
+                      className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/70 transition-colors"
                     >
 
                       {/* USER */}
                       <td className="px-6 py-5">
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 min-w-[240px]">
 
-                          <div className="w-11 h-11 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center font-bold">
+                          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 text-purple-700 flex items-center justify-center font-bold text-base shrink-0">
                             {u.name
                               ?.charAt(0)
                               ?.toUpperCase() || 'U'}
                           </div>
 
-                          <div>
-                            <p className="font-semibold text-gray-800">
-                              {u.name}
+                          <div className="min-w-0">
+
+                            <p className="font-bold text-slate-800 truncate max-w-[240px]">
+                              {u.name || 'Unknown User'}
                             </p>
 
-                            <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
-                              <Mail size={13} />
-                              {u.email}
+                            <p className="text-sm text-slate-500 flex items-center gap-1.5 mt-1 max-w-[280px] truncate">
+                              <Mail size={13} className="shrink-0" />
+                              <span className="truncate">
+                                {u.email}
+                              </span>
                             </p>
+
                           </div>
 
                         </div>
@@ -881,20 +1131,23 @@ const AdminPanel = () => {
                       {/* DATE */}
                       <td className="px-6 py-5">
 
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <CalendarDays size={16} />
+                        <div className="inline-flex items-center gap-2 text-sm text-slate-600">
+                          <CalendarDays
+                            size={16}
+                            className="text-slate-400"
+                          />
 
                           {u.createdAt
                             ? new Date(
-                              u.createdAt
-                            ).toLocaleDateString(
-                              'en-IN',
-                              {
-                                day: '2-digit',
-                                month: 'short',
-                                year: 'numeric',
-                              }
-                            )
+                                u.createdAt
+                              ).toLocaleDateString(
+                                'en-IN',
+                                {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric',
+                                }
+                              )
                             : 'N/A'}
                         </div>
 
@@ -906,10 +1159,11 @@ const AdminPanel = () => {
                         {u._id !== user._id ? (
 
                           <button
+                            type="button"
                             onClick={() =>
                               handleDeleteUser(u._id)
                             }
-                            className="inline-flex items-center gap-2 bg-red-50 text-red-600 border border-red-200 px-3 py-2 rounded-lg hover:bg-red-100 transition text-sm font-semibold"
+                            className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 hover:border-red-200 transition text-sm font-bold"
                           >
                             <Trash2 size={16} />
                             Delete
@@ -917,7 +1171,7 @@ const AdminPanel = () => {
 
                         ) : (
 
-                          <span className="inline-flex items-center gap-2 bg-gray-100 text-gray-500 px-3 py-2 rounded-lg text-sm font-medium">
+                          <span className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-100 text-slate-500 text-sm font-semibold">
                             <ShieldCheck size={16} />
                             Current Admin
                           </span>
@@ -938,13 +1192,18 @@ const AdminPanel = () => {
 
           )}
 
-        </div>
+        </section>
 
-        {/* ================= FOOTER INFO ================= */}
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
+        {/* ===================================================
+            FOOTER INFO
+        =================================================== */}
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm text-slate-500">
 
           <div className="flex items-center gap-2">
-            <ShieldCheck size={16} className="text-purple-600" />
+            <ShieldCheck
+              size={16}
+              className="text-purple-600"
+            />
             Admin access is protected.
           </div>
 
