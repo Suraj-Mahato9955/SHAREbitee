@@ -15,7 +15,7 @@ const protect = async (req, res, next) => {
         message: 'Not authorized, no token'
       });
     }
-
+// authorized token
     const token = req.headers.authorization.split(' ')[1];
 
     console.log('TOKEN RECEIVED:', token ? 'YES' : 'NO');
@@ -27,6 +27,7 @@ const protect = async (req, res, next) => {
     );
 
     console.log('TOKEN VERIFIED:', decoded);
+    
 
     req.user = await User.findById(decoded.id).select('-password');
 
