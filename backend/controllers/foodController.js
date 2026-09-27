@@ -16,7 +16,7 @@ const addFood = async (req, res) => {
       image,
       servesPeople
     } = req.body;
-    // Basic validation
+    
     if (!foodName || !quantity || !location) {
       return res.status(400).json({ message: 'Please fill all required fields' });
     }
