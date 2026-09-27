@@ -1,6 +1,5 @@
 const Notification = require('../models/Notification');
 
-// Get notifications for logged-in user
 const getMyNotifications = async (req, res) => {
   try {
     const notifications = await Notification.find({
@@ -21,7 +20,6 @@ const getMyNotifications = async (req, res) => {
 };
 
 
-// Mark notification as read
 const markAsRead = async (req, res) => {
   try {
     const notification = await Notification.findOne({
@@ -50,7 +48,6 @@ const markAsRead = async (req, res) => {
 };
 
 
-// Mark all notifications as read
 const markAllAsRead = async (req, res) => {
   try {
     await Notification.updateMany(
