@@ -42,8 +42,8 @@ const createRequest = async (req, res) => {
       foodId,
       receiverId: req.user._id,
     });
-
-    // Notify donor
+    
+// modify error
     await Notification.create({
       userId: food.donorId,
       message: `${req.user.name} has requested your food "${food.foodName}"`,
