@@ -40,12 +40,10 @@ const deleteUser = async (req, res) => {
       donorId: user._id,
     });
 
-    // Delete requests received by this user
     await Request.deleteMany({
       receiverId: user._id,
     });
 
-    // Delete requests where this user was volunteer
     await Request.deleteMany({
       volunteerId: user._id,
     });
@@ -70,7 +68,6 @@ const deleteUser = async (req, res) => {
 // ===============================
 const getAdminStats = async (req, res) => {
   try {
-    // USER COUNTS
     const totalUsers = await User.countDocuments();
 
     const totalDonors = await User.countDocuments({
@@ -89,7 +86,6 @@ const getAdminStats = async (req, res) => {
       role: 'admin',
     });
 
-    // FOOD COUNTS
     const totalFood = await Food.countDocuments();
 
     const availableFood = await Food.countDocuments({
