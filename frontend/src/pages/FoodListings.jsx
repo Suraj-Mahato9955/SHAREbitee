@@ -83,7 +83,7 @@ const FoodListings = () => {
     );
   });
 
-  /* LOADING */
+  /* Loading */
   if (loading) {
     return (
       <div className="min-h-[calc(100vh-80px)] bg-slate-50 px-4 py-12">
