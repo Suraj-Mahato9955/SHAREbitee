@@ -86,6 +86,7 @@ const NGODashboard = () => {
     .filter((request) => request.status === 'delivered')
     .reduce(
       (total, request) =>
+        
         total + (Number(request.foodId?.servesPeople) || 0),
       0
     );
@@ -133,6 +134,7 @@ const NGODashboard = () => {
 
       case 'approved':
         return <CheckCircle size={14} />;
+        
 
       case 'rejected':
         return <XCircle size={14} />;
@@ -155,6 +157,7 @@ const NGODashboard = () => {
   const getStatusMessage = (status) => {
     switch (status) {
       case 'pending':
+        
         return 'Waiting for donor approval';
 
       case 'approved':
