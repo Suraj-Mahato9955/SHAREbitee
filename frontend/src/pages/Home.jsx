@@ -25,6 +25,7 @@ const Home = () => {
       <section className="relative overflow-hidden bg-gradient-to-br from-green-800 via-green-700 to-emerald-600 text-white">
 
         {/* Decorative circles */}
+        
         <div className="absolute -top-32 -right-20 w-80 h-80 rounded-full bg-white/10"></div>
         <div className="absolute -bottom-40 -left-24 w-96 h-96 rounded-full bg-white/5"></div>
         <div className="absolute top-1/2 right-1/4 w-32 h-32 rounded-full bg-emerald-300/10"></div>
@@ -34,6 +35,7 @@ const Home = () => {
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
 
             {/* LEFT */}
+            
             <div className="text-center lg:text-left">
 
               <div className="inline-flex items-center gap-2 bg-white/10 border border-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold text-green-50 mb-6">
@@ -56,6 +58,7 @@ const Home = () => {
               </p>
 
               {/* CTA */}
+              
               <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mt-8">
 
                 <Link
