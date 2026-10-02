@@ -232,7 +232,7 @@ const VolunteerDashboard = () => {
   return (
     <div className="min-h-screen bg-slate-50 pb-16">
 
-      {/* ================= HERO ================= */}
+      {/* ================ HERO ================ */}
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-600 to-cyan-500 text-white">
 
         <div className="absolute -top-24 -right-20 w-72 h-72 bg-white/10 rounded-full blur-2xl" />
