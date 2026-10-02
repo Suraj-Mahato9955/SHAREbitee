@@ -45,6 +45,7 @@ const AdminPanel = () => {
     try {
       if (showRefresh) {
         setRefreshing(true);
+        
       } else {
         setLoading(true);
       }
@@ -129,6 +130,7 @@ const AdminPanel = () => {
 
       toast.error(
         error.response?.data?.message ||
+        
         'Failed to delete user'
       );
     }
@@ -165,6 +167,7 @@ const AdminPanel = () => {
   // FILTER USERS
   // =========================
   const filteredUsers = users.filter((u) => {
+    
     const search = searchTerm.toLowerCase().trim();
 
     const matchesSearch =
