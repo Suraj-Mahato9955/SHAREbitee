@@ -97,6 +97,7 @@ const AddFood = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
 
     if (!formData.latitude || !formData.longitude) {
       toast.error('Please select your current location 📍');
@@ -120,6 +121,7 @@ const AddFood = () => {
         error.response?.data?.message ||
         'Failed to add food'
       );
+      
     } finally {
       setLoading(false);
     }
@@ -129,6 +131,7 @@ const AddFood = () => {
     <div className="min-h-[calc(100vh-80px)] bg-slate-50 px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
 
       <div className="max-w-5xl mx-auto">
+        
 
         {/* PAGE HEADER */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-green-700 via-green-600 to-emerald-500 text-white p-7 sm:p-10 mb-8 shadow-lg">
