@@ -7,7 +7,7 @@ import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
-// Pages
+// =========Pages=========
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
