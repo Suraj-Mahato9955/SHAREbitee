@@ -9,8 +9,8 @@ import VolunteerDashboard from './VolunteerDashboard';
 
 const Dashboard = () => {
   const { user, loading } = useContext(AuthContext);
-
-  // Wait for AuthContext to restore user from localStorage
+  
+// Wait for AuthContext to restore user from localStorage
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
