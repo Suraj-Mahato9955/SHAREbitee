@@ -32,6 +32,7 @@ const Login = () => {
       toast.error(
         error.response?.data?.message || 'Login failed'
       );
+      
     } finally {
       setLoading(false);
     }
@@ -45,6 +46,7 @@ const Login = () => {
         <div className="grid md:grid-cols-2">
 
           {/* LEFT BRANDING SECTION */}
+          
           <div className="hidden md:flex relative overflow-hidden bg-gradient-to-br from-green-700 via-green-600 to-emerald-500 p-10 lg:p-14 text-white">
 
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full"></div>
